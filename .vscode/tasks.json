@@ -2,26 +2,24 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "build SDL2 project",
+            "label": "build",
             "type": "shell",
-            "command": "g++",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "command": "cmd.exe",
             "args": [
-                "-std=c++17",
-                "-g",
-                "-o",
-                "engine.exe",
-                "src/*.cpp",
-                "src/**/*.cpp",
-                "-IC:/msys64/mingw64/include/SDL2",
-                "-Dmain=SDL_main",
-                "-LC:/msys64/mingw64/lib",
-                "-lSDL2"
+                "/c",
+                "C:/msys64/mingw64/bin/g++.exe -std=c++20 -g src/core/main.cpp src/core/GameLoop.cpp src/platform/Window.cpp -o build/game.exe -Isrc -IC:/msys64/mingw64/include -LC:/msys64/mingw64/lib -lsfml-graphics -lsfml-window -lsfml-system && copy /y C:\\msys64\\mingw64\\bin\\libsfml-graphics-3.dll build\\sfml-graphics-2.dll && copy /y C:\\msys64\\mingw64\\bin\\libsfml-window-3.dll build\\sfml-window-2.dll && copy /y C:\\msys64\\mingw64\\bin\\libsfml-system-3.dll build\\sfml-system-2.dll && copy /y C:\\msys64\\mingw64\\bin\\libgcc_s_seh-1.dll build\\ && copy /y C:\\msys64\\mingw64\\bin\\libstdc++-6.dll build\\ && copy /y C:\\msys64\\mingw64\\bin\\libwinpthread-1.dll build\\"
             ],
             "group": {
                 "kind": "build",
                 "isDefault": true
             },
-            "problemMatcher": "$gcc"
+            "problemMatcher": {
+                "base": "$gcc",
+                "fileLocation": ["relative", "${workspaceFolder}"]
+            }
         }
     ]
 }

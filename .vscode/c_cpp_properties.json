@@ -4,13 +4,12 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/**",
-                "C:/msys64/mingw64/include/SDL2",
                 "C:/msys64/mingw64/include"
             ],
             "defines": [],
             "compilerPath": "C:/msys64/mingw64/bin/g++.exe",
             "cStandard": "c11",
-            "cppStandard": "c++17",
+            "cppStandard": "c++20",
             "intelliSenseMode": "windows-gcc-x64"
         }
     ],

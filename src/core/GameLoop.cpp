@@ -1,8 +1,7 @@
 #include "GameLoop.h"
 #include "platform/Window.h"
-#include <SDL2/SDL.h>
+#include <SFML/Graphics.hpp>
 
-struct Window; 
 void GameLoop::init(float dt) {
     fixedDt = dt;
     accumulator = 0.0f;
@@ -15,31 +14,32 @@ void GameLoop::init(float dt) {
 void GameLoop::addUpdate(UpdateCallback cb) {
     if (updateCount < 32) updateCallbacks[updateCount++] = cb;
 }
+
 void GameLoop::addFixedUpdate(UpdateCallback cb) {
     if (fixedUpdateCount < 32) fixedUpdateCallbacks[fixedUpdateCount++] = cb;
 }
+
 void GameLoop::addRender(RenderCallback cb) {
     if (renderCount < 32) renderCallbacks[renderCount++] = cb;
 }
 
 static float getDeltaTime() {
-    static Uint64 last = 0;
-    Uint64 now = SDL_GetPerformanceCounter();
-    float dt = (float)(now - last) / SDL_GetPerformanceFrequency();
-    last = now;
-    if (dt > 0.25f) dt = 0.25f;   // matches your clamp
+    static sf::Clock clock;
+    float dt = clock.restart().asSeconds();
+    if (dt > 0.25f) dt = 0.25f;   // clamp to prevent spiral of death
     return dt;
 }
 
 void GameLoop::run(Window& window) {
     while (window.isOpen() && running) {
-        // 1. Handle input (also updates window events)
+
+        // 1. Process SFML events (input, window close, resize, etc.)
         window.pollEvents();
 
-        // 2. Measure time
+        // 2. Measure frame time
         float dt = getDeltaTime();
 
-        // 3. Variable-rate updates (called once per frame)
+        // 3. Variable-rate updates (once per frame)
         for (int i = 0; i < updateCount; ++i)
             updateCallbacks[i](dt);
 
@@ -54,11 +54,11 @@ void GameLoop::run(Window& window) {
         // 5. Interpolation alpha
         float alpha = accumulator / fixedDt;
 
-        // 6. Render callbacks (they do the clearing, drawing, displaying)
+        // 6. Render callbacks – they clear, draw, and display
         for (int i = 0; i < renderCount; ++i)
             renderCallbacks[i](alpha);
 
-        SDL_Delay(1);  // gentle on CPU
+        // Note: No need for SDL_Delay – SFML's display() already syncs
     }
 }
 

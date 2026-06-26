@@ -1,13 +1,14 @@
-#define SDL_MAIN_HANDLED 
 #include "platform/Window.h"
 #include "core/GameLoop.h"
-#include <SDL2/SDL_opengl.h>
 
 static Window* g_window = nullptr;
 
 void renderScene(float alpha) {
-    g_window->clear();
-    g_window->display();
+    if (g_window) {
+        g_window->handle.clear(sf::Color(50, 50, 50));
+        // Render your scene here
+        g_window->handle.display();
+    }
 }
 
 int main() {
