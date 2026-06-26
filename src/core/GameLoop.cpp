@@ -1,8 +1,11 @@
 #include "GameLoop.h"
 #include "platform/Window.h"
 #include <SFML/Graphics.hpp>
+#include <iostream>
+#include "main.h"
 
-void GameLoop::init(float dt) {
+void GameLoop::init(float dt)
+{
     fixedDt = dt;
     accumulator = 0.0f;
     running = true;
@@ -11,27 +14,38 @@ void GameLoop::init(float dt) {
     renderCount = 0;
 }
 
-void GameLoop::addUpdate(UpdateCallback cb) {
-    if (updateCount < 32) updateCallbacks[updateCount++] = cb;
+void GameLoop::addUpdate(UpdateCallback cb)
+{
+    if (updateCount < 32)
+        updateCallbacks[updateCount++] = cb;
 }
 
-void GameLoop::addFixedUpdate(UpdateCallback cb) {
-    if (fixedUpdateCount < 32) fixedUpdateCallbacks[fixedUpdateCount++] = cb;
+void GameLoop::addFixedUpdate(UpdateCallback cb)
+{
+    if (fixedUpdateCount < 32)
+        fixedUpdateCallbacks[fixedUpdateCount++] = cb;
 }
 
-void GameLoop::addRender(RenderCallback cb) {
-    if (renderCount < 32) renderCallbacks[renderCount++] = cb;
+void GameLoop::addRender(RenderCallback cb)
+{
+    if (renderCount < 32)
+        renderCallbacks[renderCount++] = cb;
 }
 
-static float getDeltaTime() {
+static float getDeltaTime()
+{
     static sf::Clock clock;
     float dt = clock.restart().asSeconds();
-    if (dt > 0.25f) dt = 0.25f;   // clamp to prevent spiral of death
+    if (dt > 0.25f)
+        dt = 0.25f; // clamp to prevent spiral of death
     return dt;
 }
 
-void GameLoop::run(Window& window) {
-    while (window.isOpen() && running) {
+void GameLoop::run(Window &window, ConfigData &config)
+{
+
+    while (window.isOpen() && running)
+    {
 
         // 1. Process SFML events (input, window close, resize, etc.)
         window.pollEvents();
@@ -45,8 +59,24 @@ void GameLoop::run(Window& window) {
 
         // 4. Fixed-timestep updates
         accumulator += dt;
-        while (accumulator >= fixedDt) {
-            for (int i = 0; i < fixedUpdateCount; ++i)
+        while (accumulator >= fixedDt)
+        {
+
+            for (size_t i = 0; i < config.shapes.size(); ++i)
+            {
+                auto &shape = config.shapes[i];
+                auto drawable = shape.drawable;
+                shape.x += shape.vx * fixedDt;
+                shape.y += shape.vy * fixedDt;
+                sf::Rect<float> bounds = drawable->getGlobalBounds();
+                if (shape.x < 0 || shape.x + bounds.size.x > config.windowWidth)
+                    shape.vx = -shape.vx;
+                if (shape.y < 0 || shape.y + bounds.size.y > config.windowHeight)
+                    shape.vy = -shape.vy;
+
+                drawable->setPosition(sf::Vector2f(shape.x, shape.y));
+            }
+            for (size_t i = 0; i < fixedUpdateCount; ++i)
                 fixedUpdateCallbacks[i](fixedDt);
             accumulator -= fixedDt;
         }
@@ -54,14 +84,16 @@ void GameLoop::run(Window& window) {
         // 5. Interpolation alpha
         float alpha = accumulator / fixedDt;
 
-        // 6. Render callbacks – they clear, draw, and display
+        // 6. Render callbacks – they draw and display
         for (int i = 0; i < renderCount; ++i)
+        {
             renderCallbacks[i](alpha);
-
+        }
         // Note: No need for SDL_Delay – SFML's display() already syncs
     }
 }
 
-void GameLoop::quit() {
+void GameLoop::quit()
+{
     running = false;
 }

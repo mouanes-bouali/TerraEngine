@@ -1,8 +1,22 @@
 // GameLoop.h
+#include <SFML/Graphics.hpp>
 #pragma once
 
 struct Window;   // ← forward declaration – tells the compiler "Window exists"
+struct ConfigData; // ← forward declaration – tells the compiler "ConfigData exists"
 
+
+struct Shapes{
+sf::Color color;
+std::string   type;
+float vx,vy;
+float x,y;
+
+float height;
+float width;
+float radius;
+sf::Shape* drawable;
+};
 typedef void (*UpdateCallback)(float dt);
 typedef void (*RenderCallback)(float alpha);
 
@@ -22,6 +36,6 @@ struct GameLoop {
     void addUpdate(UpdateCallback cb);
     void addFixedUpdate(UpdateCallback cb);
     void addRender(RenderCallback cb);
-    void run(Window& window);
+    void run(Window& window, ConfigData& config);
     void quit();
 };

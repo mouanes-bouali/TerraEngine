@@ -1,0 +1,6 @@
+Window 500 500
+Font fonts/tech.ttf 18 255 255 255
+Circle circle1 100 100 30 30 255 0 0 30
+Circle circle2 400 300 -20 20 0 255 0 25
+Rectangle rect1 200 200 10 10 0 0 255 50 25
+Rectangle rect2 600 400 20 10 255 255 0 80 40
