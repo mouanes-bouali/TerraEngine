@@ -1,0 +1,21 @@
+What i learned in C++:
+Reffences:
+-passing by refrence: in C/C++ functions by default pass by values so if i pa ss a variable it will make a copy of it , so if we wanna chanage the actual variable we pass by refrence by simply adding (&varb); var (x) gets another name created for it 
+-it can't be Null
+-cant change the assigned var
+-if passing largeDATA we use: void ReadBigData(const &bigData) "if the passed values is more than 8byte"
+-for int and float not using it is faster
+-we use it if we wanna modify the return of a funtion directly: int& getelemnt(i)return array[i];
+and do something like getelement(arr,i)=5;
+-used in Range : auto&, to avoid copying
+- &x is not the same, this means give the adress of the variable
+
+SmartPointers:
+-these are basicly pointers that gets deleted automatically when the object get destroyed.
+-there are to types , Unique_ptr and shared_ptr.
+-use shared one when we gonna pass the value to functions ect.
+-use unique when we need only one user of the pointer
+
+
+RAII(Resource Acusiation is Inasialisation):
+it is the concept of adding ~destroy() func in every class made 
