@@ -1,0 +1,157 @@
+# ENGINE PROGRAMMING RULES
+# Keep this file open while coding. Every line must respect these.
+
+================================================================================
+1. ARCHITECTURE (Clean + Layered)
+================================================================================
+
+- Inner layers NEVER include outer-layer headers.
+  Components: no SFML, no ImGui, no OpenGL.
+  Systems: no SFML, no ImGui.
+  Renderer: SFML allowed (outermost layer).
+  main.cpp: the ONLY file that wires everything together.
+
+- Each module does ONE thing.
+  If you can't describe it without "and", split it.
+
+- .h = WHAT it does. .cpp = HOW it does it.
+  #pragma once in every header.
+
+- Systems register with the game loop.
+  loop.addFixedUpdate(sMovement);
+  loop.addRender(sRender);
+  The loop NEVER knows what systems exist.
+  Adding a system = write function + one registration line. Never touch GameLoop.cpp.
+
+================================================================================
+2. DATA-ORIENTED DESIGN (Memory + Cache)
+================================================================================
+
+- Separate arrays per component type. NEVER one vector of mixed entities.
+  YES: CTransform transforms[MAX]; CShape shapes[MAX];
+  NO:  struct Entity { CTransform t; CShape s; }; vector<Entity> entities;
+
+- Struct fields: LARGEST TO SMALLEST.
+  float, int, pointers first. uint8_t, bool, enum last.
+  This minimizes padding. Use sizeof() to verify.
+
+- Hot/cold split.
+  Fields touched every frame together. Fields touched rarely separate.
+  Hot struct goes into the main pool. Cold struct loaded only when needed.
+
+- Components are PURE DATA. No methods. No virtual. No inheritance.
+  struct CTransform { float x,y,vx,vy; };  <- correct
+
+- Replace 2+ related bools with an enum.
+  NO:  bool isAlive; bool isFrenzy;
+  YES: enum class EnemyState : uint8_t { AliveNormal, AliveFrenzy, Dead };
+
+- Every enum gets : uint8_t unless you need >256 values.
+
+- NO strings in hot data. NO std::string in components.
+  Use integer IDs, hashes, or store names in a separate cold array.
+
+- Separate arrays by STATE. Array membership IS the state.
+  If you write "if (state == Dead) continue;" inside a hot loop, split the array.
+  aliveTransforms[aliveCount]  <- iterate this, no branches.
+
+- Swap-back removal. O(1) delete. Order NOT preserved.
+  arr[i] = arr[count-1]; count--;
+
+- Hoist invariants before loops.
+  const float g = config.gravity;
+  for (...) { use g; }  <- not config.gravity every iteration.
+
+================================================================================
+3. PATTERNS (Apply When Needed)
+================================================================================
+
+GAME LOOP:
+  Fixed timestep accumulator. Separate update/fixedUpdate/render.
+  Clamp dt to prevent spiral of death.
+
+STATE:
+  enum + function pointer table (enter/update/exit).
+  Transitions via events, never direct assignment.
+  Adding a state = one function + one table entry. Loop never changes.
+
+OBSERVER:
+  Systems subscribe to events. Broadcaster doesn't know who listens.
+  Death event -> sound, particles, UI all react independently.
+
+EVENT QUEUE:
+  Ring buffer. Events pushed during frame, processed at START of next frame.
+  Decouples when event fires from when it's handled.
+
+COMMAND:
+  Every user action = Command (execute + undo).
+  Builder orders, placement, undo/redo.
+
+OBJECT POOL:
+  Pre-allocated fixed array. NO new/delete in hot path.
+  acquire() returns pointer, release() marks free.
+
+UPDATE METHOD:
+  Every entity/system has update(dt). Loop calls it. Loop knows nothing else.
+
+SPATIAL PARTITION:
+  Grid hash for collision. Only check same/neighboring cells.
+  O(n) instead of O(n^2).
+
+DIRTY FLAG:
+  Mark data dirty when it changes. Recompute only when dirty.
+  Pathfinding: recalculate only when target or terrain changes.
+
+STRATEGY:
+  Swappable algorithms behind common interface.
+  Collision: circle vs rect. Target selection: melee vs ranged.
+
+================================================================================
+4. C++ RULES
+================================================================================
+
+- Pass primitives (int, float) by VALUE.
+- Pass large objects (>8 bytes) by CONST REFERENCE.
+- Pass by REFERENCE when you need to modify the original.
+- Use shared_ptr for shared ownership (pass by VALUE).
+- Use unique_ptr for single ownership (MOVE, don't copy).
+- Prefer RAII. You should almost never write new or delete.
+- Use auto when type is obvious from right side.
+- Use const everywhere: functions, parameters, variables.
+- Stack allocation first. Heap only when lifetime > scope.
+- NO global variables. Pass dependencies through constructors.
+
+================================================================================
+5. OPTIMIZATION RULES (Profile First)
+================================================================================
+
+- Profile BEFORE optimizing. Never guess.
+- Per-system timers in ImGui debug panel.
+- Hoist invariants (see DOD section).
+- Avoid virtual calls in hot paths.
+- Avoid function pointers in innermost loops.
+- Prefer arrays over linked lists.
+- Prefer linear search over hash for < 16 elements.
+- Batch draw calls. Minimize state changes.
+- Sleep/wake entities far from camera.
+
+================================================================================
+6. CODE STYLE
+================================================================================
+
+- Components: C prefix (CTransform, CShape, CHealth).
+- Systems: s prefix (sMovement, sCollision, sRender).
+- Enums: E prefix or descriptive name (EnemyState, TileType).
+- Member variables: m_ prefix or trailing _ (be consistent).
+- Constants: UPPER_CASE.
+- One commit per feature/fix. Descriptive messages.
+
+================================================================================
+7. DEPENDENCY CHECKLIST (Per File)
+================================================================================
+
+Before writing #include, ask:
+- Does this component need SFML? NO.
+- Does this system need SFML? NO (except Renderer).
+- Does this system need ImGui? NO.
+- Does this file change when I swap SFML for SDL? If yes, it's in the wrong layer.
