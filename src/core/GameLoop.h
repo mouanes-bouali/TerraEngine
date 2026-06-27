@@ -11,6 +11,8 @@ sf::Color color;
 std::string   type;
 float vx,vy;
 float x,y;
+float previousX,previousY;
+bool isVisible;
 
 float height;
 float width;
