@@ -1,10 +1,13 @@
+// Include implementation at the bottom (standard practice for templates)
 // No #pragma once — this file is included intentionally
 #include "ComponentPool.h"
 template<typename T>
 void ComponentPool<T>::add(EntityID entity, const T& value) {
     if (entity >= sparse.size())
         sparse.resize(entity + 1, INVALID_INDEX);
-    if (sparse[entity] != INVALID_INDEX) return;
+    if (sparse[entity] != INVALID_INDEX) {
+        dense[sparse[entity]] = value; // Update existing
+    }
 
     sparse[entity] = static_cast<int32_t>(dense.size());
     dense.push_back(value);
@@ -57,4 +60,5 @@ template<typename T>
 const std::vector<EntityID>& ComponentPool<T>::ownerList() const { return owners; }
 
 template<typename T>
-size_t ComponentPool<T>::count() const { return dense.size(); }
+size_t ComponentPool<T>::count() const { return dense.size();
+}

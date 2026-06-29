@@ -19,3 +19,8 @@ SmartPointers:
 
 RAII(Resource Acusiation is Inasialisation):
 it is the concept of adding ~destroy() func in every class made 
+
+Spare and Dense :
+first of all the problem: looking for an element will take O(N) which can take time , the solution is to use sspare and dense
+which basicly works like this :
+sparse saves the entityId as the index and the content as what index in dense have the compnenet for the entity, meanwhile Owner; its index is normal  order (same as dense) its content shows for what the componenet belongs too
