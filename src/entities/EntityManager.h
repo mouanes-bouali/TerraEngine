@@ -1,53 +1,102 @@
 #pragma once
 #include "ComponentPool.h"
-
 #include <vector>
-using EntityID = uint32_t;
+#include <cstdint>
+#include <functional>
+#include <memory>
 
-    enum Tag{
-        None,
-        Player,
-        Enemy,
-        Projectile,
-        Building,
-        Tile,
-        Particle
-    };
+constexpr size_t MAX_COMPONENTS = 64;
+using Signature = uint64_t;
 
+// Forward declare the SComponent concept (define it in a separate Concepts file or here)
+template<typename T>
+concept SComponent = std::is_class_v<T>;
+class ComponentRegistry {
+public:
+    static uint8_t assignNextID();
 
-struct Entity {
-    EntityID id;
-    Tag tag;
+private:
+    inline static uint8_t counter = 0;
 };
+
 class EntityManager {
 public:
-    EntityID createEntity(Tag tag );
+    EntityID createEntity();
     void destroyEntity(EntityID e);
 
-    Tag getTag(EntityID e);
-    void setTag(EntityID e, Tag newTag);
-    bool hasTag(EntityID e, Tag tag);
-    std::vector<EntityID> getByTag(Tag tag);
+    template<SComponent T>
+    void addComponent(EntityID e, const T& component = T{});
 
-    EntityID createTile();
-    EntityID createEnemy();
-    EntityID createProjectile();
-    EntityID createBuilding();
-    EntityID createParticle();
-    EntityID createPlayer();
+    template<SComponent T>
+    void removeComponent(EntityID e);
 
-    bool isTile(EntityID e);
-    bool isEnemy(EntityID e);
-    bool isProjectile(EntityID e);
-    bool isBuilding(EntityID e);
-    bool isPlayer(EntityID e);
+    template<SComponent T>
+    T& getComponent(EntityID e);
 
-    ComponentPool<Tag>        tags;
-    ComponentPool<CTransform> transforms;
-    ComponentPool<CHealth>    healths;
-    ComponentPool<CGravity>   gravities;
-  
+    template<SComponent T>
+    bool hasTag(EntityID e) const;
+
+    bool matches(EntityID e, const Signature& systemSignature) const;
 
 private:
     EntityID nextID = 0;
+    std::vector<Signature> entitySignatures;
+    std::vector<std::function<void(EntityID)>> removeFunctions;
+    std::vector<std::shared_ptr<void>> pools;
+
+    template<SComponent T>
+    struct ComponentTypeID {
+        static inline const uint8_t ID = ComponentRegistry::assignNextID();
+    };
+
+    template<SComponent T>
+    ComponentPool<T>* getPool();
 };
+
+// ============================================================
+// TEMPLATE IMPLEMENTATIONS (must stay in header)
+// ============================================================
+
+template<SComponent T>
+void EntityManager::addComponent(EntityID e, const T& component) {
+    getPool<T>()->add(e, component);
+    entitySignatures[e] |= (1ULL << ComponentTypeID<T>::ID);
+}
+
+template<SComponent T>
+void EntityManager::removeComponent(EntityID e) {
+    getPool<T>()->remove(e);
+    entitySignatures[e] &= ~(1ULL << ComponentTypeID<T>::ID);
+}
+
+template<SComponent T>
+T& EntityManager::getComponent(EntityID e) {
+    return getPool<T>()->get(e);
+}
+
+template<SComponent T>
+bool EntityManager::hasTag(EntityID e) const {
+    return (entitySignatures[e] & (1ULL << ComponentTypeID<T>::ID)) != 0;
+}
+
+template<SComponent T>
+ComponentPool<T>* EntityManager::getPool() {
+    uint8_t compID = ComponentTypeID<T>::ID;
+
+    if (compID >= pools.size()) {
+        pools.resize(compID + 1, nullptr);
+    }
+
+    if (!pools[compID]) {
+        auto newPool = std::make_shared<ComponentPool<T>>();
+        pools[compID] = newPool;
+
+        removeFunctions.push_back([this](EntityID e) {
+            auto* specificPool = static_cast<ComponentPool<T>*>(this->pools[ComponentTypeID<T>::ID].get());
+            if (specificPool && specificPool->has(e)) {
+                specificPool->remove(e);
+            }
+        });
+    }
+    return static_cast<ComponentPool<T>*>(pools[compID].get());
+}

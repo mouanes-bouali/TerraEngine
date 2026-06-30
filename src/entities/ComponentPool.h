@@ -1,17 +1,28 @@
 #pragma once
 #include <vector>
 #include <cstdint>
+#include <concepts>
+#include <cstdint>
+#include <bitset>
+
+// 1. The base safety anchor
+struct Component {};
+
+// 2. The safety guard (C++20 Concept)
+template<typename T>
+concept SComponent = std::derived_from<T, Component>;
+
 using EntityID = uint32_t;
-struct CTransform {
+struct CTransform: Component {
     float x, y,z;
     float rotation;
     float scaleX, scaleY;
 };
-struct CHealth {
+struct CHealth: Component {
     int current;
     int max;
 };
-struct CGravity {
+struct CGravity: Component {
     float strength;
     float weight;
 }; 

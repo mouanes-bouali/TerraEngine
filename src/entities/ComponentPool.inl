@@ -1,6 +1,7 @@
 // Include implementation at the bottom (standard practice for templates)
 // No #pragma once — this file is included intentionally
 #include "ComponentPool.h"
+#include <cassert>
 template<typename T>
 void ComponentPool<T>::add(EntityID entity, const T& value) {
     if (entity >= sparse.size())
@@ -39,6 +40,9 @@ bool ComponentPool<T>::has(EntityID entity) const {
 
 template<typename T>
 T& ComponentPool<T>::get(EntityID entity) {
+    if (!has(entity)) {
+     assert(false && "Entity does not have this component");
+    }
     return dense[sparse[entity]];
 }
 
