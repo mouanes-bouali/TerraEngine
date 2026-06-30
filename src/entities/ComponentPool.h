@@ -1,37 +1,15 @@
 #pragma once
 #include <vector>
 #include <cstdint>
-#include <concepts>
-#include <cstdint>
-#include <bitset>
-
-// 1. The base safety anchor
-struct Component {};
-
-// 2. The safety guard (C++20 Concept)
-template<typename T>
-concept SComponent = std::derived_from<T, Component>;
+#include <cassert>
 
 using EntityID = uint32_t;
-struct CTransform: Component {
-    float x, y,z;
-    float rotation;
-    float scaleX, scaleY;
-};
-struct CHealth: Component {
-    int current;
-    int max;
-};
-struct CGravity: Component {
-    float strength;
-    float weight;
-}; 
-
 
 template<typename T>
 class ComponentPool {
 public:
-    void add(EntityID entity, const T& value);
+    T& add(EntityID entity, const T& value);
+    T& add(EntityID entity);
     void remove(EntityID entity);
     bool has(EntityID entity) const;
     T& get(EntityID entity);
@@ -50,5 +28,4 @@ private:
     std::vector<int32_t> sparse;
 };
 
-// Include implementation at the bottom (standard practice for templates)
 #include "ComponentPool.inl"

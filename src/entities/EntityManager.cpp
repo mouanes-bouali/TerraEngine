@@ -1,13 +1,25 @@
 #include "EntityManager.h"
 
+uint8_t ComponentRegistry::counter = 0;
+
 uint8_t ComponentRegistry::assignNextID() {
     return counter++;
 }
 
-EntityID EntityManager::createEntity() {
-    EntityID e = nextID++;
+void EntityManager::ensureSignatureSize(EntityID e) {
     if (e >= entitySignatures.size()) {
         entitySignatures.resize(e + 1, 0);
+    }
+}
+
+EntityID EntityManager::createEntity() {
+    EntityID e;
+    if (!freeList.empty()) {
+        e = freeList.back();
+        freeList.pop_back();
+    } else {
+        e = nextID++;
+        ensureSignatureSize(e);
     }
     entitySignatures[e] = 0;
     return e;
@@ -15,11 +27,9 @@ EntityID EntityManager::createEntity() {
 
 void EntityManager::destroyEntity(EntityID e) {
     if (e >= entitySignatures.size()) return;
-
-    for (auto& fn : removeFunctions) {
-        fn(e);
-    }
+    for (auto& fn : removeFunctions) fn(e);
     entitySignatures[e] = 0;
+    freeList.push_back(e);
 }
 
 bool EntityManager::matches(EntityID e, const Signature& systemSignature) const {

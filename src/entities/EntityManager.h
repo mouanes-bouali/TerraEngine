@@ -1,5 +1,6 @@
 #pragma once
 #include "ComponentPool.h"
+#include "Components.h"
 #include <vector>
 #include <cstdint>
 #include <functional>
@@ -8,19 +9,21 @@
 constexpr size_t MAX_COMPONENTS = 64;
 using Signature = uint64_t;
 
-// Forward declare the SComponent concept (define it in a separate Concepts file or here)
-template<typename T>
-concept SComponent = std::is_class_v<T>;
 class ComponentRegistry {
 public:
     static uint8_t assignNextID();
-
 private:
-    inline static uint8_t counter = 0;
+    static uint8_t counter;
 };
 
 class EntityManager {
 public:
+    EntityManager() = default;
+    EntityManager(const EntityManager&) = delete;
+    EntityManager& operator=(const EntityManager&) = delete;
+    EntityManager(EntityManager&&) = delete;
+    EntityManager& operator=(EntityManager&&) = delete;
+
     EntityID createEntity();
     void destroyEntity(EntityID e);
 
@@ -40,9 +43,12 @@ public:
 
 private:
     EntityID nextID = 0;
+    std::vector<EntityID> freeList;
     std::vector<Signature> entitySignatures;
     std::vector<std::function<void(EntityID)>> removeFunctions;
     std::vector<std::shared_ptr<void>> pools;
+
+    void ensureSignatureSize(EntityID e);
 
     template<SComponent T>
     struct ComponentTypeID {
@@ -54,17 +60,19 @@ private:
 };
 
 // ============================================================
-// TEMPLATE IMPLEMENTATIONS (must stay in header)
+// TEMPLATE IMPLEMENTATIONS
 // ============================================================
 
 template<SComponent T>
 void EntityManager::addComponent(EntityID e, const T& component) {
+    ensureSignatureSize(e);
     getPool<T>()->add(e, component);
     entitySignatures[e] |= (1ULL << ComponentTypeID<T>::ID);
 }
 
 template<SComponent T>
 void EntityManager::removeComponent(EntityID e) {
+    if (e >= entitySignatures.size()) return;
     getPool<T>()->remove(e);
     entitySignatures[e] &= ~(1ULL << ComponentTypeID<T>::ID);
 }
@@ -76,6 +84,7 @@ T& EntityManager::getComponent(EntityID e) {
 
 template<SComponent T>
 bool EntityManager::hasTag(EntityID e) const {
+    if (e >= entitySignatures.size()) return false;
     return (entitySignatures[e] & (1ULL << ComponentTypeID<T>::ID)) != 0;
 }
 
@@ -91,12 +100,15 @@ ComponentPool<T>* EntityManager::getPool() {
         auto newPool = std::make_shared<ComponentPool<T>>();
         pools[compID] = newPool;
 
-        removeFunctions.push_back([this](EntityID e) {
-            auto* specificPool = static_cast<ComponentPool<T>*>(this->pools[ComponentTypeID<T>::ID].get());
+        removeFunctions.push_back([this, compID](EntityID e) {
+            auto* specificPool = static_cast<ComponentPool<T>*>(
+                this->pools[compID].get()
+            );
             if (specificPool && specificPool->has(e)) {
                 specificPool->remove(e);
             }
         });
     }
+
     return static_cast<ComponentPool<T>*>(pools[compID].get());
 }
