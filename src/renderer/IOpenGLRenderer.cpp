@@ -7,6 +7,11 @@ IOpenGLRenderer::IOpenGLRenderer(sf::RenderWindow& window)
 IOpenGLRenderer::~IOpenGLRenderer() {
     shutdown();
 }
+void IOpenGLRenderer::renderScene(float alpha) {
+    beginFrame();
+    drawTriangle();
+    endFrame();
+}
 
 bool IOpenGLRenderer::init() {
     m_window.setActive(true);

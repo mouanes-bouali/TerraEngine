@@ -1,40 +1,38 @@
-#include <SFML/Graphics.hpp>
-#include <iostream>
+#include "platform/Window.h"
+#include "core/GameLoop.h"
+#include "main.h"
 #include "renderer/IOpenGLRenderer.h"
+#include <iostream>
+#include "imgui/imgui.h"
+#include "imgui/imgui-SFML.h"
+
+static IOpenGLRenderer* g_renderer = nullptr;
 
 int main() {
-    // Request OpenGL 3.3 Core
     sf::ContextSettings settings;
     settings.depthBits = 24;
-    settings.stencilBits = 8;
     settings.majorVersion = 3;
     settings.minorVersion = 3;
     settings.attributeFlags = sf::ContextSettings::Core;
 
-    sf::RenderWindow window(
-        sf::VideoMode(sf::Vector2u(1280, 720)),
-        "OpenGL Test",
-        sf::Style::Default,
-        sf::State::Windowed,
-        settings);
-
-    IOpenGLRenderer renderer(window);
+    Window window("Engine", 1280, 720, settings);
+    ConfigData emptyConfig = { 1280, 720, "Arial", 16, sf::Color::White, {}, 60 }; 
+    IOpenGLRenderer renderer(window .handle);
     if (!renderer.init()) {
         std::cerr << "Renderer init failed\n";
         return -1;
     }
+    g_renderer = &renderer;
 
-    while (window.isOpen()) {
-        while (auto event = window.pollEvent()) {
-            if (event->is<sf::Event::Closed>())
-                window.close();
-        }
-
-        renderer.beginFrame();
-        renderer.drawTriangle();
-        renderer.endFrame();
-    }
-
+    GameLoop loop;
+    loop.init(1.0f / 60.0f);
+    loop.addRender([](float alpha) {
+        g_renderer->renderScene(alpha);
+    });
+    ImGui::SFML::Init(window.handle);
+    
+    loop.run(window);
     renderer.shutdown();
+    ImGui::SFML::Shutdown();
     return 0;
 }

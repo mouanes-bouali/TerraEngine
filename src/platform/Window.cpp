@@ -1,17 +1,17 @@
 #include "platform/Window.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui-SFML.h"
-
-Window::Window(const char* title, int w, int h)
-    : handle(sf::VideoMode(sf::Vector2u(w, h), 32), title), running(true)
+// Window.cpp
+Window::Window(const char* title, int w, int h, const sf::ContextSettings& settings)
+    : handle(sf::VideoMode(sf::Vector2u(w, h), 32), title, sf::Style::Default, sf::State::Windowed, settings)
+    , running(true)
 {
-    handle.setVerticalSyncEnabled(true);
-    handle.setFramerateLimit(120);
+    handle.setActive(true);
+    handle.setFramerateLimit(60);
 }
 
 void Window::pollEvents() {
     while (auto event = handle.pollEvent()) {
-         ImGui::SFML::ProcessEvent(handle, *event); 
          
      
         if (event->is<sf::Event::Closed>()) {

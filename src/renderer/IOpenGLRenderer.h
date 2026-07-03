@@ -16,6 +16,7 @@ public:
     void beginFrame() override;
     void endFrame() override;
     void drawTriangle();
+    void renderScene(float alpha); 
 
     void setCamera(const Camera&) override;
     void setLight(const RenderLight&) override;
