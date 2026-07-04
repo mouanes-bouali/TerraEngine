@@ -1,6 +1,6 @@
 #include "EntityManager.h"
 
-uint8_t ComponentRegistry::counter = 0;
+uint8_t ComponentRegistry::counter = 1;
 
 uint8_t ComponentRegistry::assignNextID() {
     return counter++;
@@ -21,7 +21,7 @@ EntityID EntityManager::createEntity() {
         e = nextID++;
         ensureSignatureSize(e);
     }
-    entitySignatures[e] = 0;
+    entitySignatures[e] = 1;
     return e;
 }
 

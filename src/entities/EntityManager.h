@@ -26,7 +26,7 @@ public:
 
     EntityID createEntity();
     void destroyEntity(EntityID e);
-
+    
     template<SComponent T>
     void addComponent(EntityID e, const T& component = T{});
 
@@ -38,7 +38,9 @@ public:
 
     template<SComponent T>
     bool hasTag(EntityID e) const;
-
+    bool EntityAlive(EntityID e) const {
+        return e < entitySignatures.size() &&( entitySignatures[e]& 1 )== 1;
+    }
     bool matches(EntityID e, const Signature& systemSignature) const;
 
 private:
