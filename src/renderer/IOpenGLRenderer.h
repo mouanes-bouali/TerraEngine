@@ -1,34 +1,61 @@
 #pragma once
 
+#include <SFML/Graphics/RenderWindow.hpp>
 #include <glad/glad.h>
-#include <SFML/Graphics.hpp>
-#include "IRenderer.h"
 #include <glm/glm.hpp>
+#include <memory>
 #include <vector>
 
-class IOpenGLRenderer : public IRenderer {
+// Forward declarations
+class Shader;
+struct Camera;
+struct RenderLight;
+struct RenderInstance;
+
+/**
+ * @brief OpenGL renderer backend.
+ * 
+ * Manages the OpenGL context, shaders, and drawing primitives.
+ * Follows RAII: resources are freed in shutdown() or destructor.
+ */
+class IOpenGLRenderer {
 public:
     explicit IOpenGLRenderer(sf::RenderWindow& window);
-    ~IOpenGLRenderer() override;
+    ~IOpenGLRenderer();
 
-    bool init() override;
-    void shutdown() override;
-    void beginFrame() override;
-    void endFrame() override;
-    void drawTriangle();
-    void renderScene(float alpha); 
+    // Initialization / shutdown
+    bool init();
+    void shutdown();
 
-    void setCamera(const Camera&) override;
-    void setLight(const RenderLight&) override;
-    void drawInstanced(const std::vector<RenderInstance>&) override;
-    void drawSingle(const RenderInstance&) override;
-    int loadTexture(const char*) override;
-    void unloadTexture(int) override;
+    // Main rendering entry point
+    void renderScene(float alpha); // alpha for interpolation (future use)
+
+    // Configuration (stubs for now)
+    void setCamera(const Camera& cam);
+    void setLight(const RenderLight& light);
+
+    // Drawing commands
+    void drawInstanced(const std::vector<RenderInstance>& instances);
+    void drawSingle(const RenderInstance& instance);
+
+    // Texture management (stubs)
+    int loadTexture(const char* filePath);
+    void unloadTexture(int textureID);
 
 private:
-    sf::RenderWindow& m_window;
-    GLuint shaderProgram = 0;
+    // Internal helpers
+    void beginFrame();
+    void endFrame();
+    void drawTriangle(); // temporary test primitive
+
+    // OpenGL resources
     GLuint vao = 0;
     GLuint vbo = 0;
-    GLuint createShader(GLenum type, const char* source);
+    std::unique_ptr<Shader> m_shader;
+
+    sf::RenderWindow& m_window;
+
+    // Delete copy/move (non-copyable)
+    IOpenGLRenderer(const IOpenGLRenderer&) = delete;
+    IOpenGLRenderer& operator=(const IOpenGLRenderer&) = delete;
 };
