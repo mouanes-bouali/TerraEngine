@@ -46,7 +46,7 @@ private:
     // Internal helpers
     void beginFrame();
     void endFrame();
-    void drawTriangle(); // temporary test primitive
+    void drawTriangle(float time); // temporary test primitive
 
     // OpenGL resources
     GLuint vao = 0;
