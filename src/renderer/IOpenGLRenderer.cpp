@@ -260,7 +260,7 @@ void IOpenGLRenderer::drawCubes(float time)
         return;
 
     m_shader->use();
-
+    m_shader->setVec4("uOverrideColor", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
     // ---- 1. Set View and Projection matrices (once per frame) ----
     m_shader->setMat4("view", m_view);
     m_shader->setMat4("projection", m_projection);
