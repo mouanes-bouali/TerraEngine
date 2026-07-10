@@ -13,10 +13,10 @@ struct RenderLight;
 struct RenderInstance;
 
 /**
- * @brief OpenGL renderer backend with full matrix transformation support.
+ * @brief OpenGL renderer backend with full 3D MVP transformation support.
  * 
  * Manages the OpenGL context, shaders, textures, and drawing primitives.
- * Implements model transformations (translate, rotate, scale) via GLM.
+ * Implements Model-View-Projection (MVP) matrix pipeline for 3D rendering.
  * Follows RAII: resources are freed in shutdown() or destructor.
  */
 class IOpenGLRenderer {
@@ -29,11 +29,11 @@ public:
     void shutdown();
 
     // Main rendering entry point
-    void renderScene(float alpha); // alpha for interpolation (future use)
+    void renderScene(float alpha);
 
-    // Configuration (stubs for now)
-    void setCamera(const Camera& cam);
-    void setLight(const RenderLight& light);
+    // Camera configuration
+    void setCamera(const glm::vec3& position, const glm::vec3& target, const glm::vec3& up);
+    void setProjection(float fov, float aspect, float nearPlane, float farPlane);
 
     // Drawing commands
     void drawInstanced(const std::vector<RenderInstance>& instances);
@@ -47,7 +47,7 @@ private:
     // Internal helpers
     void beginFrame();
     void endFrame();
-    void drawRectangle(float time); // Draws the textured rectangle with transformations
+    void drawCubes(float time); // Draws multiple 3D cubes with transformations
 
     // OpenGL resources
     GLuint vao = 0;
@@ -55,6 +55,12 @@ private:
     GLuint ebo = 0;
     GLuint texture = 0;
     std::unique_ptr<Shader> m_shader;
+
+    // Camera matrices
+    glm::mat4 m_view;
+    glm::mat4 m_projection;
+    bool m_viewDirty = true;
+    bool m_projDirty = true;
 
     sf::RenderWindow& m_window;
 
