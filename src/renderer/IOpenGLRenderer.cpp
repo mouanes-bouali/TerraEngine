@@ -2,6 +2,7 @@
 #include "Shaders.h"
 #include <iostream>
 #include <cmath>
+#include <vector>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -12,10 +13,24 @@
 // -------------------- Constructor / Destructor --------------------
 
 IOpenGLRenderer::IOpenGLRenderer(sf::RenderWindow& window)
-    : m_window(window) {}
+    : m_window(window)
+    , m_view(glm::mat4(1.0f))
+    , m_projection(glm::mat4(1.0f)) {}
 
 IOpenGLRenderer::~IOpenGLRenderer() {
     shutdown();
+}
+
+// -------------------- Camera Configuration --------------------
+
+void IOpenGLRenderer::setCamera(const glm::vec3& position, const glm::vec3& target, const glm::vec3& up) {
+    m_view = glm::lookAt(position, target, up);
+    m_viewDirty = false;
+}
+
+void IOpenGLRenderer::setProjection(float fov, float aspect, float nearPlane, float farPlane) {
+    m_projection = glm::perspective(glm::radians(fov), aspect, nearPlane, farPlane);
+    m_projDirty = false;
 }
 
 // -------------------- Initialization --------------------
@@ -31,6 +46,9 @@ bool IOpenGLRenderer::init() {
     }
 
     std::cout << "OpenGL version: " << glGetString(GL_VERSION) << "\n";
+
+    // Enable depth testing (Z-buffer)
+    glEnable(GL_DEPTH_TEST);
 
     // -------------------------------------------------------------
     // 1. Load shaders from external files
@@ -49,39 +67,69 @@ bool IOpenGLRenderer::init() {
     }
 
     // -------------------------------------------------------------
-    // 2. Vertex Data: positions + colors + texture coordinates
-    //    Stride = 8 floats per vertex (3 pos + 3 color + 2 texCoord)
+    // 2. Vertex Data: A 3D CUBE (36 vertices, 6 faces)
+    //    Each vertex: Position (3) + Color (3) + TexCoord (2) = 8 floats
     // -------------------------------------------------------------
     float vertices[] = {
         // positions          // colors           // texture coords
-         0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f, // top right
-         0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f, // bottom right
-        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // bottom left
-        -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f  // top left
+        // Back face
+        -0.5f, -0.5f, -0.5f,  1.0f, 0.0f, 0.0f,  0.0f, 0.0f,
+         0.5f, -0.5f, -0.5f,  1.0f, 0.0f, 0.0f,  1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 0.0f, 0.0f,  1.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 0.0f, 0.0f,  1.0f, 1.0f,
+        -0.5f,  0.5f, -0.5f,  1.0f, 0.0f, 0.0f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  1.0f, 0.0f, 0.0f,  0.0f, 0.0f,
+
+        // Front face
+        -0.5f, -0.5f,  0.5f,  0.0f, 1.0f, 0.0f,  0.0f, 0.0f,
+         0.5f, -0.5f,  0.5f,  0.0f, 1.0f, 0.0f,  1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  0.0f, 1.0f, 0.0f,  1.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,  0.0f, 1.0f, 0.0f,  1.0f, 1.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f, 0.0f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 1.0f, 0.0f,  0.0f, 0.0f,
+
+        // Left face
+        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 1.0f,  1.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f, 0.0f, 1.0f,  1.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, 1.0f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, 1.0f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 1.0f,  0.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 1.0f,  1.0f, 0.0f,
+
+        // Right face
+         0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 0.0f,  1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 0.0f,  1.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  1.0f, 1.0f, 0.0f,  0.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  1.0f, 1.0f, 0.0f,  0.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,  1.0f, 1.0f, 0.0f,  0.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 0.0f,  1.0f, 0.0f,
+
+        // Bottom face
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 1.0f,  0.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 1.0f,  1.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,  0.0f, 1.0f, 1.0f,  1.0f, 0.0f,
+         0.5f, -0.5f,  0.5f,  0.0f, 1.0f, 1.0f,  1.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 1.0f, 1.0f,  0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 1.0f,  0.0f, 1.0f,
+
+        // Top face
+        -0.5f,  0.5f, -0.5f,  1.0f, 0.0f, 1.0f,  0.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 0.0f, 1.0f,  1.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f,  1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f,  1.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f,  0.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,  1.0f, 0.0f, 1.0f,  0.0f, 1.0f
     };
 
-    // Indices for two triangles forming a rectangle
-    unsigned int indices[] = {
-        0, 1, 3,   // first triangle
-        1, 2, 3    // second triangle
-    };
-
-    // Create VAO, VBO, and EBO
+    // Create VAO, VBO (we don't need EBO anymore since we have 36 vertices)
     glGenVertexArrays(1, &vao);
     glGenBuffers(1, &vbo);
-    glGenBuffers(1, &ebo);
 
     glBindVertexArray(vao);
 
-    // ---- Upload VBO (Vertex Data) ----
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    // ---- Upload EBO (Index Data) ----
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-    // ---- Set Vertex Attribute Pointers ----
     // Position attribute (location = 0)
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
                           8 * sizeof(float), (void*)0);
@@ -97,10 +145,8 @@ bool IOpenGLRenderer::init() {
                           8 * sizeof(float), (void*)(6 * sizeof(float)));
     glEnableVertexAttribArray(2);
 
-    // Unbind for safety
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
-    // Note: EBO is UNBOUND when we unbind the VAO, but the VAO remembers it.
 
     // -------------------------------------------------------------
     // 3. Load the Texture
@@ -109,23 +155,26 @@ bool IOpenGLRenderer::init() {
         std::cerr << "Warning: Failed to load texture. Rendering will continue without it.\n";
     }
 
+    // -------------------------------------------------------------
+    // 4. Set default camera and projection (will be overridden later)
+    // -------------------------------------------------------------
+    setCamera(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    setProjection(45.0f, 800.0f / 600.0f, 0.1f, 100.0f);
+
     return true;
 }
 
 // -------------------- Texture Loading --------------------
 
 int IOpenGLRenderer::loadTexture(const char* path) {
-    // Generate a texture object
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
 
-    // Set texture wrapping/filtering parameters
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    // Load the image data using stb_image
     int width, height, nrChannels;
     stbi_set_flip_vertically_on_load(true);
 
@@ -136,34 +185,20 @@ int IOpenGLRenderer::loadTexture(const char* path) {
         glGenerateMipmap(GL_TEXTURE_2D);
         stbi_image_free(data);
         std::cout << "Successfully loaded texture: " << path << "\n";
-        return 0; // Success
+        return 0;
     } else {
         std::cerr << "Failed to load texture: " << path << " | Error: " << stbi_failure_reason() << "\n";
         stbi_image_free(data);
-        return -1; // Failure
+        return -1;
     }
 }
 
 // -------------------- Shutdown --------------------
 
 void IOpenGLRenderer::shutdown() {
-    if (vbo) {
-        glDeleteBuffers(1, &vbo);
-        vbo = 0;
-    }
-    if (ebo) {
-        glDeleteBuffers(1, &ebo);
-        ebo = 0;
-    }
-    if (vao) {
-        glDeleteVertexArrays(1, &vao);
-        vao = 0;
-    }
-    if (texture) {
-        glDeleteTextures(1, &texture);
-        texture = 0;
-    }
-    // Shader is managed by unique_ptr – automatically deleted
+    if (vbo) { glDeleteBuffers(1, &vbo); vbo = 0; }
+    if (vao) { glDeleteVertexArrays(1, &vao); vao = 0; }
+    if (texture) { glDeleteTextures(1, &texture); texture = 0; }
     m_shader.reset();
 }
 
@@ -174,7 +209,7 @@ void IOpenGLRenderer::renderScene(float alpha) {
 
     static float startTime = static_cast<float>(std::clock()) / CLOCKS_PER_SEC;
     float currentTime = static_cast<float>(std::clock()) / CLOCKS_PER_SEC - startTime;
-    drawRectangle(currentTime);
+    drawCubes(currentTime);
 
     endFrame();
 }
@@ -183,75 +218,72 @@ void IOpenGLRenderer::renderScene(float alpha) {
 
 void IOpenGLRenderer::beginFrame() {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear depth buffer too!
 }
 
 void IOpenGLRenderer::endFrame() {
-    m_window.display(); // swap buffers
+    m_window.display();
 }
 
-// -------------------- Drawing with Transformations! --------------------
+// -------------------- Drawing 3D Cubes with MVP! --------------------
 
-void IOpenGLRenderer::drawRectangle(float time) {
+void IOpenGLRenderer::drawCubes(float time) {
     if (!m_shader) return;
 
     m_shader->use();
 
-    // =============================================================
-    // 1. BUILD THE TRANSFORMATION MATRIX
-    //    Order: Scale → Rotate → Translate (applied in reverse)
-    // =============================================================
-    glm::mat4 transform = glm::mat4(1.0f); // Start with identity matrix
+    // ---- 1. Set View and Projection matrices (once per frame) ----
+    m_shader->setMat4("view", m_view);
+    m_shader->setMat4("projection", m_projection);
 
-    // Translate: move to bottom-right of the screen
-    transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.0f));
-
-    // Rotate: spin continuously around Z-axis over time
-    transform = glm::rotate(transform, time * glm::radians(50.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-
-    // Scale: make it 50% of its original size
-    transform = glm::scale(transform, glm::vec3(0.5f, 0.5f, 0.5f));
-
-    // ---- Pass the transform to the shader ----
-    m_shader->setMat4("transform", transform);
-
-    // =============================================================
-    // 2. OPTIONAL: Time-varying color override (kept from before)
-    // =============================================================
-    float greenValue = (std::sin(time) / 2.0f) + 0.5f;
-    m_shader->setVec4("uOverrideColor", glm::vec4(0.0f, greenValue, 0.0f, 1.0f));
-    m_shader->setFloat("uOffset", 0.0f); // Set to 0 to stay centered
-
-    // =============================================================
-    // 3. BIND TEXTURE AND DRAW
-    // =============================================================
+    // ---- 2. Bind texture ----
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture);
     m_shader->setInt("ourTexture", 0);
 
+    // ---- 3. Define 10 positions for cubes ----
+    std::vector<glm::vec3> cubePositions = {
+        glm::vec3( 0.0f,  0.0f,  0.0f),
+        glm::vec3( 2.0f,  5.0f, -15.0f),
+        glm::vec3(-1.5f, -2.2f, -2.5f),
+        glm::vec3(-3.8f, -2.0f, -12.3f),
+        glm::vec3( 2.4f, -0.4f, -3.5f),
+        glm::vec3(-1.7f,  3.0f, -7.5f),
+        glm::vec3( 1.3f, -2.0f, -2.5f),
+        glm::vec3( 1.5f,  2.0f, -2.5f),
+        glm::vec3( 1.5f,  0.2f, -1.5f),
+        glm::vec3(-1.3f,  1.0f, -1.5f)
+    };
+
+    // ---- 4. Draw each cube with its own model matrix ----
     glBindVertexArray(vao);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+    for (size_t i = 0; i < cubePositions.size(); i++) {
+        glm::mat4 model = glm::mat4(1.0f);
+
+        // Translate
+        model = glm::translate(model, cubePositions[i]);
+
+        // Rotate: unique angle per cube
+        float angle = 20.0f * static_cast<float>(i);
+        // If cube index is 0, 3, 6, 9 (every 3rd), rotate over time
+        if (i % 3 == 0) {
+            angle += time * 50.0f;
+        }
+        model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+
+        // Pass model matrix to shader
+        m_shader->setMat4("model", model);
+
+        // Draw the cube (36 vertices = 12 triangles)
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+    }
+
     glBindVertexArray(0);
 }
 
-// -------------------- Stubs (to be implemented later) --------------------
+// -------------------- Stubs --------------------
 
-void IOpenGLRenderer::setCamera(const Camera&) {
-    // TODO: update view/projection matrices in shaders
-}
-
-void IOpenGLRenderer::setLight(const RenderLight&) {
-    // TODO: update lighting uniforms
-}
-
-void IOpenGLRenderer::drawInstanced(const std::vector<RenderInstance>&) {
-    // TODO: implement instanced rendering
-}
-
-void IOpenGLRenderer::drawSingle(const RenderInstance&) {
-    // TODO: draw a single entity with its transform
-}
-
-void IOpenGLRenderer::unloadTexture(int) {
-    // TODO: texture cleanup
-}
+void IOpenGLRenderer::drawInstanced(const std::vector<RenderInstance>&) {}
+void IOpenGLRenderer::drawSingle(const RenderInstance&) {}
+void IOpenGLRenderer::unloadTexture(int) {}
