@@ -4,6 +4,8 @@
 #include <cmath>
 #include <vector>
 #include <glm/gtc/matrix_transform.hpp>
+#include <cmath>
+
 #include <glm/gtc/type_ptr.hpp>
 
 // stb_image - single header image loader
@@ -165,6 +167,8 @@ bool IOpenGLRenderer::init()
     // -------------------------------------------------------------
     // 4. Set default camera and projection (will be overridden later)
     // -------------------------------------------------------------
+
+
     setCamera(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     setProjection(45.0f, 800.0f / 600.0f, 0.1f, 100.0f);
 
@@ -234,6 +238,11 @@ void IOpenGLRenderer::renderScene(float alpha)
 
     static float startTime = static_cast<float>(std::clock()) / CLOCKS_PER_SEC;
     float currentTime = static_cast<float>(std::clock()) / CLOCKS_PER_SEC - startTime;
+    
+    float raduis = 5.0f;
+    float camX= cos(currentTime)*raduis;
+    float camZ= sin(currentTime)*raduis;
+    setCamera(glm::vec3(camX, 0.0f, camZ), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     drawCubes(currentTime);
 
     endFrame();
