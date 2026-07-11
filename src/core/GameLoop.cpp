@@ -1,5 +1,6 @@
 #include "GameLoop.h"
 #include "platform/Window.h"
+#include "platform/IInput.h"
 #include <SFML/Graphics.hpp>
 
 void GameLoop::init(float dt) {
@@ -7,12 +8,16 @@ void GameLoop::init(float dt) {
     accumulator = 0.0f;
     running = true;
     updateCount = 0;
+    inputUpdateCount = 0;
     fixedUpdateCount = 0;
     renderCount = 0;
 }
 
 void GameLoop::addUpdate(UpdateCallback cb) {
     if (updateCount < 8) updateCallbacks[updateCount++] = cb;
+}
+void GameLoop::addInputUpdate(UpdateCallback cb, Window& window) {
+    if (inputUpdateCount < 8) inputUpdateCallbacks[inputUpdateCount++] = cb;
 }
 
 void GameLoop::addFixedUpdate(UpdateCallback cb) {
@@ -30,14 +35,18 @@ static float getDeltaTime() {
     return dt;
 }
 
-void GameLoop::run(Window& window) {
+void GameLoop::run(Window& window, IInput& inputSystem) {
     while (window.isOpen() && running) {
-        window.pollEvents();
+        window.pollEvents(inputSystem);
         float dt = getDeltaTime();
 
         // Variable-rate updates
         for (int i = 0; i < updateCount; ++i)
             updateCallbacks[i](dt);
+
+        // Input updates
+        for (int i = 0; i < inputUpdateCount; ++i)
+            inputUpdateCallbacks[i](dt);
 
         // Fixed-timestep updates
         accumulator += dt;

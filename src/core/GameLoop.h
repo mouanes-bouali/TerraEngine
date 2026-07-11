@@ -2,8 +2,9 @@
 #include <SFML/Graphics.hpp>
 #pragma once
 
-struct Window;     // ← forward declaration – tells the compiler "Window exists"
-struct ConfigData; // ← forward declaration – tells the compiler "ConfigData exists"
+struct Window;     // forward declaration – tells the compiler "Window exists"
+struct ConfigData; // forward declaration – tells the compiler "ConfigData exists"
+class IInput;      // forward declaration
 
 struct Shapes
 {
@@ -29,17 +30,18 @@ struct GameLoop
     bool running;
 
     UpdateCallback updateCallbacks[32];
+    UpdateCallback inputUpdateCallbacks[32];
     int updateCount;
     UpdateCallback fixedUpdateCallbacks[32];
     int fixedUpdateCount;
     RenderCallback renderCallbacks[32];
     int renderCount;
-
+    int inputUpdateCount;
     void init(float dt);
     void addUpdate(UpdateCallback cb);
+    void addInputUpdate(UpdateCallback cb, Window& window);
     void addFixedUpdate(UpdateCallback cb);
     void addRender(RenderCallback cb);
-    // GameLoop.h
-    void run(Window &window); // ← make sure this matches .cpp
+    void run(Window &window, IInput& inputSystem);
     void quit();
 };
