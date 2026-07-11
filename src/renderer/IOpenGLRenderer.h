@@ -5,6 +5,7 @@
 #include <glm/glm.hpp>
 #include <memory>
 #include <vector>
+#include "IRenderer.h"
 
 // Forward declarations
 class Shader;
@@ -19,34 +20,37 @@ struct RenderInstance;
  * Implements Model-View-Projection (MVP) matrix pipeline for 3D rendering.
  * Follows RAII: resources are freed in shutdown() or destructor.
  */
-class IOpenGLRenderer {
+class IOpenGLRenderer : public IRenderer    {
 public:
     explicit IOpenGLRenderer(sf::RenderWindow& window);
     ~IOpenGLRenderer();
 
     // Initialization / shutdown
-    bool init();
-    void shutdown();
+    bool init() override;
+    void shutdown() override;
 
     // Main rendering entry point
-    void renderScene(float alpha);
+    void renderScene(float alpha)override;
 
     // Camera configuration
-    void setCamera(const glm::vec3& position, const glm::vec3& target, const glm::vec3& up);
-    void setProjection(float fov, float aspect, float nearPlane, float farPlane);
+    void setCamera(const glm::vec3& position, const glm::vec3& target, const glm::vec3& up) override;
+    void setProjection(float fov, float aspect, float nearPlane, float farPlane) override;
 
     // Drawing commands
-    void drawInstanced(const std::vector<RenderInstance>& instances);
-    void drawSingle(const RenderInstance& instance);
+    void drawInstanced(const std::vector<RenderInstance>& instances) override;
+    void drawSingle(const RenderInstance& instance) override;
 
     // Texture management
-    int loadTexture(const char* filePath);
-    void unloadTexture(int textureID);
+    int loadTexture(const char* filePath) override;
+    void unloadTexture(int textureID) override;
+    void setLight(const RenderLight& light) override;
+    void setCamera(const Camera& cam) override;
+    void beginFrame() override;
+    void endFrame() override;
 
 private:
     // Internal helpers
-    void beginFrame();
-    void endFrame();
+    
     void drawCubes(float time); // Draws multiple 3D cubes with transformations
 
     // OpenGL resources
