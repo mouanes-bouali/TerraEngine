@@ -33,7 +33,9 @@ public:
 
     // ----- Camera -----
     virtual void setCamera(const Camera& cam) = 0;
-
+    virtual void renderScene(float alpha) = 0; // render all queued objects with interpolation factor alpha
+    virtual void setProjection(float fov, float aspect, float nearPlane, float farPlane) = 0;
+    virtual void setCamera(const glm::vec3& position, const glm::vec3& target, const glm::vec3& up) = 0;
     // ----- Lighting -----
     virtual void setLight(const RenderLight& light) = 0;
 
