@@ -30,6 +30,12 @@ void IOpenGLRenderer::setCamera(const glm::vec3 &position, const glm::vec3 &targ
     m_viewDirty = false;
 }
 
+void IOpenGLRenderer::setCamera(const Camera& cam)
+{
+    m_view = cam.view;
+    m_projection = cam.projection;
+}
+
 void IOpenGLRenderer::setProjection(float fov, float aspect, float nearPlane, float farPlane)
 {
     m_projection = glm::perspective(glm::radians(fov), aspect, nearPlane, farPlane);
@@ -232,18 +238,19 @@ void IOpenGLRenderer::shutdown()
 
 // -------------------- Rendering Loop --------------------
 
-void IOpenGLRenderer::renderScene(float alpha)
+void IOpenGLRenderer::renderScene(float /*alpha*/)
 {
     beginFrame();
 
-    static float startTime = static_cast<float>(std::clock()) / CLOCKS_PER_SEC;
-    float currentTime = static_cast<float>(std::clock()) / CLOCKS_PER_SEC - startTime;
-    
+    // Use a real wall-clock timer for smooth animation
+    static sf::Clock clock;
+    float elapsed = clock.getElapsedTime().asSeconds();
+
     float raduis = 5.0f;
-    float camX= cos(currentTime)*raduis;
-    float camZ= sin(currentTime)*raduis;
-    setCamera(glm::vec3(camX, 0.0f, camZ), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    drawCubes(currentTime);
+    float camX= cos(elapsed)*raduis;
+    float camZ= sin(elapsed)*raduis;
+    //setCamera(glm::vec3(camX, 0.0f, camZ), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    drawCubes(elapsed); // Pass real elapsed time for smooth continuous rotation
 
     endFrame();
 }
@@ -326,3 +333,7 @@ void IOpenGLRenderer::drawCubes(float time)
 void IOpenGLRenderer::drawInstanced(const std::vector<RenderInstance> &) {}
 void IOpenGLRenderer::drawSingle(const RenderInstance &) {}
 void IOpenGLRenderer::unloadTexture(int) {}
+
+void IOpenGLRenderer::setLight(const RenderLight&) {
+    // stub – lighting not yet implemented
+}
