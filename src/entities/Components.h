@@ -1,6 +1,7 @@
 #pragma once
 #include <concepts>
 #include <cstdint>
+#include <glm/glm.hpp>
 
 struct Component {};
 
@@ -45,3 +46,14 @@ struct CTile     : Component {};
 struct CProjectile : Component {};
 struct CParticle : Component {};
 struct CBuilding : Component {};
+
+// Links an entity to its pre-uploaded GPU mesh/texture
+struct CRenderable : Component {
+    uint32_t meshHandle = 0;     // index into renderer's mesh array
+    int      textureId  = -1;    // -1 = solid color, >=0 = texture
+    glm::vec4 color = {1.0f, 1.0f, 1.0f, 1.0f};
+
+    CRenderable() = default;
+    CRenderable(uint32_t mesh, int tex, glm::vec4 tint = {1,1,1,1})
+        : meshHandle(mesh), textureId(tex), color(tint) {}
+};
