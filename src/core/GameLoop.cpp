@@ -2,6 +2,8 @@
 #include "platform/Window.h"
 #include "platform/IInput.h"
 #include <SFML/Graphics.hpp>
+#include "imgui/imgui.h"
+#include "imgui/imgui-SFML.h"
 
 void GameLoop::init(float dt) {
     fixedDt = dt;
@@ -11,6 +13,7 @@ void GameLoop::init(float dt) {
     inputUpdateCount = 0;
     fixedUpdateCount = 0;
     renderCount = 0;
+    imguiCount = 0;
 }
 
 void GameLoop::addUpdate(UpdateCallback cb) {
@@ -26,6 +29,10 @@ void GameLoop::addFixedUpdate(UpdateCallback cb) {
 
 void GameLoop::addRender(RenderCallback cb) {
     if (renderCount < 8) renderCallbacks[renderCount++] = cb;
+}
+
+void GameLoop::addImGuiUpdate(UpdateCallback cb) {
+    if (imguiCount < 8) imguiCallbacks[imguiCount++] = cb;
 }
 
 static float getDeltaTime() {
@@ -56,7 +63,7 @@ void GameLoop::run(Window& window, IInput& inputSystem) {
             accumulator -= fixedDt;
         }
 
-        // Render
+        // Render (draws to back buffer)
         float alpha = accumulator / fixedDt;
         for (int i = 0; i < renderCount; ++i)
             renderCallbacks[i](alpha);
