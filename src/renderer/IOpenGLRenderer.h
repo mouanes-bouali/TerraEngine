@@ -5,6 +5,7 @@
 #include <glm/glm.hpp>
 #include <memory>
 #include <vector>
+#include <string>
 #include "IRenderer.h"
 
 // Forward declarations
@@ -12,6 +13,15 @@ class Shader;
 struct Camera;
 struct RenderLight;
 struct RenderInstance;
+
+// Stores GPU references for one loaded mesh
+struct GPUMesh {
+    GLuint vao = 0;
+    GLuint vbo = 0;
+    GLuint ebo = 0;
+    int indexCount = 0;  // number of indices (0 = non-indexed, use vertexCount)
+    int vertexCount = 0;
+};
 
 /**
  * @brief OpenGL renderer backend with full 3D MVP transformation support.
@@ -48,15 +58,15 @@ public:
     void beginFrame() override;
     void endFrame() override;
 
+    // Mesh loading
+    MeshHandle loadMesh(const char* filepath) override;
+
 private:
     // Internal helpers
-    
     void drawCubes(float time); // Draws multiple 3D cubes with transformations
+    MeshHandle addBuiltinCube(); // Creates default cube mesh, returns its handle
 
     // OpenGL resources
-    GLuint vao = 0;
-    GLuint vbo = 0;
-    GLuint ebo = 0;
     GLuint texture = 0;
     std::unique_ptr<Shader> m_shader;
 
@@ -68,7 +78,9 @@ private:
 
     sf::RenderWindow& m_window;
 
-    // Delete copy/move (non-copyable)
-    IOpenGLRenderer(const IOpenGLRenderer&) = delete;
-    IOpenGLRenderer& operator=(const IOpenGLRenderer&) = delete;
+    // Mesh storage — each entry is one unique mesh uploaded to GPU
+    std::vector<GPUMesh> m_meshes;
+    
+    // Instancing buffers
+    GLuint m_instanceVBO = 0;  // Stores model matrices + colors
 };

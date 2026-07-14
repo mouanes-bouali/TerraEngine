@@ -5,6 +5,8 @@
 #include <vector>
 #include <glm/gtc/matrix_transform.hpp>
 #include <cmath>
+#include <fstream>
+#include <sstream>
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -82,85 +84,9 @@ bool IOpenGLRenderer::init()
     }
 
     // -------------------------------------------------------------
-    // 2. Vertex Data: A 3D CUBE (36 vertices, 6 faces)
-    //    Each vertex: Position (3) + Color (3) + TexCoord (2) = 8 floats
+    // 2. Create the built-in cube mesh (mesh handle 0)
     // -------------------------------------------------------------
-    float vertices[] = {
-        // positions          // colors           // texture coords
-        // Back face
-        -0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-        0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
-        0.5f, 0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
-        0.5f, 0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
-        -0.5f, 0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-
-        // Front face
-        -0.5f, -0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
-        0.5f, -0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
-        0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f,
-        0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f,
-        -0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-        -0.5f, -0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
-
-        // Left face
-        -0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f,
-        -0.5f, 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
-        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-        -0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f,
-
-        // Right face
-        0.5f, 0.5f, 0.5f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f,
-        0.5f, 0.5f, -0.5f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f,
-        0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-        0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-        0.5f, -0.5f, 0.5f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f,
-        0.5f, 0.5f, 0.5f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f,
-
-        // Bottom face
-        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f,
-        0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-        0.5f, -0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f,
-        0.5f, -0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f,
-        -0.5f, -0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f,
-
-        // Top face
-        -0.5f, 0.5f, -0.5f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f,
-        0.5f, 0.5f, -0.5f, 1.0f, 0.0f, 1.0f, 1.0f, 1.0f,
-        0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f,
-        0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f,
-        -0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-        -0.5f, 0.5f, -0.5f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f};
-
-    // Create VAO, VBO (we don't need EBO anymore since we have 36 vertices)
-    glGenVertexArrays(1, &vao);
-    glGenBuffers(1, &vbo);
-
-    glBindVertexArray(vao);
-
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    // Position attribute (location = 0)
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
-                          8 * sizeof(float), (void *)0);
-    glEnableVertexAttribArray(0);
-
-    // Color attribute (location = 1)
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE,
-                          8 * sizeof(float), (void *)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-
-    // Texture coordinate attribute (location = 2)
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE,
-                          8 * sizeof(float), (void *)(6 * sizeof(float)));
-    glEnableVertexAttribArray(2);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+    addBuiltinCube();
 
     // -------------------------------------------------------------
     // 3. Load the Texture
@@ -170,15 +96,232 @@ bool IOpenGLRenderer::init()
     {
         std::cerr << "Warning: Failed to load texture. Rendering will continue without it.\n";
     }
-    // -------------------------------------------------------------
-    // 4. Set default camera and projection (will be overridden later)
-    // -------------------------------------------------------------
 
-
+    // -------------------------------------------------------------
+    // 4. Set default camera and projection
+    // -------------------------------------------------------------
     setCamera(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     setProjection(45.0f, 800.0f / 600.0f, 0.1f, 100.0f);
 
     return true;
+}
+
+// -------------------- Built-in Cube Mesh (Handle 0) --------------------
+
+MeshHandle IOpenGLRenderer::addBuiltinCube()
+{
+    float vertices[] = {
+        // positions          // colors           // texture coords
+        -0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+         0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
+         0.5f,  0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
+        -0.5f,  0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+
+        -0.5f, -0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
+         0.5f, -0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f,
+         0.5f,  0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f,
+        -0.5f,  0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
+
+        -0.5f,  0.5f,  0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f,
+
+         0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f,
+         0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+         0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+         0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f,
+         0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+
+        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f,
+         0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+         0.5f, -0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f,
+         0.5f, -0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f,
+
+        -0.5f,  0.5f, -0.5f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f,
+         0.5f,  0.5f, -0.5f, 1.0f, 0.0f, 1.0f, 1.0f, 1.0f,
+         0.5f,  0.5f,  0.5f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f};
+
+    GPUMesh mesh;
+    mesh.vertexCount = 36;
+
+    glGenVertexArrays(1, &mesh.vao);
+    glGenBuffers(1, &mesh.vbo);
+
+    glBindVertexArray(mesh.vao);
+    glBindBuffer(GL_ARRAY_BUFFER, mesh.vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    // Position attribute (location = 0)
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
+                          8 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    // Color attribute (location = 1)
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE,
+                          8 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+    // TexCoord attribute (location = 2)
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE,
+                          8 * sizeof(float), (void*)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
+    m_meshes.push_back(mesh);
+    return 0; // Cube is always mesh handle 0
+}
+
+// -------------------- Mesh Loading (.obj) --------------------
+
+MeshHandle IOpenGLRenderer::loadMesh(const char* filepath)
+{
+    std::ifstream file(filepath);
+    if (!file.is_open())
+    {
+        std::cerr << "Failed to open mesh file: " << filepath << "\n";
+        return 0; // return cube as fallback
+    }
+
+    std::vector<glm::vec3> positions;
+    std::vector<glm::vec2> texcoords;
+    std::vector<glm::vec3> normals;
+    std::vector<float> vertexData;
+
+    std::string line;
+    while (std::getline(file, line))
+    {
+        std::istringstream iss(line);
+        std::string prefix;
+        iss >> prefix;
+
+        if (prefix == "v")
+        {
+            glm::vec3 pos;
+            iss >> pos.x >> pos.y >> pos.z;
+            positions.push_back(pos);
+        }
+        else if (prefix == "vt")
+        {
+            glm::vec2 uv;
+            iss >> uv.x >> uv.y;
+            texcoords.push_back(uv);
+        }
+        else if (prefix == "vn")
+        {
+            glm::vec3 n;
+            iss >> n.x >> n.y >> n.z;
+            normals.push_back(n);
+        }
+        else if (prefix == "f")
+        {
+            // Parse face: f v1/vt1/vn1 v2/vt2/vn2 v3/vt3/vn3
+            for (int i = 0; i < 3; i++)
+            {
+                std::string vert;
+                iss >> vert;
+                std::replace(vert.begin(), vert.end(), '/', ' ');
+
+                std::istringstream viss(vert);
+                int vIdx = 0, vtIdx = 0, vnIdx = 0;
+                viss >> vIdx >> vtIdx >> vnIdx;
+
+                // .obj indices are 1-based
+                vIdx = (vIdx > 0) ? vIdx - 1 : 0;
+                vtIdx = (vtIdx > 0 && vtIdx <= (int)texcoords.size()) ? vtIdx - 1 : 0;
+                vnIdx = (vnIdx > 0 && vnIdx <= (int)normals.size()) ? vnIdx - 1 : 0;
+
+                if (vIdx < (int)positions.size())
+                {
+                    vertexData.push_back(positions[vIdx].x);
+                    vertexData.push_back(positions[vIdx].y);
+                    vertexData.push_back(positions[vIdx].z);
+
+                    // Color (use normal as pseudo-color if available, else white)
+                    if (vnIdx < (int)normals.size())
+                    {
+                        vertexData.push_back(normals[vnIdx].x * 0.5f + 0.5f);
+                        vertexData.push_back(normals[vnIdx].y * 0.5f + 0.5f);
+                        vertexData.push_back(normals[vnIdx].z * 0.5f + 0.5f);
+                    }
+                    else
+                    {
+                        vertexData.push_back(1.0f);
+                        vertexData.push_back(1.0f);
+                        vertexData.push_back(1.0f);
+                    }
+
+                    // Texcoord
+                    if (vtIdx < (int)texcoords.size())
+                    {
+                        vertexData.push_back(texcoords[vtIdx].x);
+                        vertexData.push_back(texcoords[vtIdx].y);
+                    }
+                    else
+                    {
+                        vertexData.push_back(0.0f);
+                        vertexData.push_back(0.0f);
+                    }
+                }
+            }
+        }
+    }
+
+    file.close();
+
+    if (vertexData.empty())
+    {
+        std::cerr << "No vertex data loaded from: " << filepath << "\n";
+        return 0;
+    }
+
+    GPUMesh mesh;
+    mesh.vertexCount = (int)vertexData.size() / 8;
+
+    glGenVertexArrays(1, &mesh.vao);
+    glGenBuffers(1, &mesh.vbo);
+
+    glBindVertexArray(mesh.vao);
+    glBindBuffer(GL_ARRAY_BUFFER, mesh.vbo);
+    glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(float),
+                 vertexData.data(), GL_STATIC_DRAW);
+
+    // Position (3 floats)
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
+                          8 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    // Color (3 floats)
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE,
+                          8 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+    // TexCoord (2 floats)
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE,
+                          8 * sizeof(float), (void*)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
+    MeshHandle handle = (MeshHandle)m_meshes.size();
+    m_meshes.push_back(mesh);
+
+    std::cout << "Loaded mesh: " << filepath << " (handle " << handle
+              << ", " << mesh.vertexCount << " verts)\n";
+    return handle;
 }
 
 // -------------------- Texture Loading --------------------
@@ -218,16 +361,14 @@ int IOpenGLRenderer::loadTexture(const char *path)
 
 void IOpenGLRenderer::shutdown()
 {
-    if (vbo)
+    for (auto& mesh : m_meshes)
     {
-        glDeleteBuffers(1, &vbo);
-        vbo = 0;
+        if (mesh.vbo) glDeleteBuffers(1, &mesh.vbo);
+        if (mesh.vao) glDeleteVertexArrays(1, &mesh.vao);
+        if (mesh.ebo) glDeleteBuffers(1, &mesh.ebo);
     }
-    if (vao)
-    {
-        glDeleteVertexArrays(1, &vao);
-        vao = 0;
-    }
+    m_meshes.clear();
+
     if (texture)
     {
         glDeleteTextures(1, &texture);
@@ -241,17 +382,6 @@ void IOpenGLRenderer::shutdown()
 void IOpenGLRenderer::renderScene(float /*alpha*/)
 {
     beginFrame();
-
-    // Use a real wall-clock timer for smooth animation
-    static sf::Clock clock;
-    float elapsed = clock.getElapsedTime().asSeconds();
-
-    float raduis = 5.0f;
-    float camX= cos(elapsed)*raduis;
-    float camZ= sin(elapsed)*raduis;
-    //setCamera(glm::vec3(camX, 0.0f, camZ), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    drawCubes(elapsed); // Pass real elapsed time for smooth continuous rotation
-
     endFrame();
 }
 
@@ -259,79 +389,96 @@ void IOpenGLRenderer::renderScene(float /*alpha*/)
 
 void IOpenGLRenderer::beginFrame()
 {
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear depth buffer too!
+    // Light sky blue background
+    glClearColor(0.53f, 0.81f, 0.92f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 void IOpenGLRenderer::endFrame()
 {
-    m_window.display();
+    // Do NOT swap buffers here - GameLoop does that after ImGui renders
 }
 
-// -------------------- Drawing 3D Cubes with MVP! --------------------
+// -------------------- drawInstanced / drawSingle --------------------
 
-void IOpenGLRenderer::drawCubes(float time)
+void IOpenGLRenderer::drawInstanced(const std::vector<RenderInstance>& instances)
 {
-    if (!m_shader)
+    if (!m_shader || m_meshes.empty() || instances.empty())
         return;
 
     m_shader->use();
-    m_shader->setVec4("uOverrideColor", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-    // ---- 1. Set View and Projection matrices (once per frame) ----
     m_shader->setMat4("view", m_view);
     m_shader->setMat4("projection", m_projection);
-
-    // ---- 2. Bind texture ----
+    
+    // Bind default texture once
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture);
     m_shader->setInt("ourTexture", 0);
+    // Use vertex colors (no texture)
 
-    // ---- 3. Define 10 positions for cubes ----
-    std::vector<glm::vec3> cubePositions = {
-        glm::vec3(0.0f, 0.0f, 0.0f),
-        glm::vec3(2.0f, 5.0f, -15.0f),
-        glm::vec3(-1.5f, -2.2f, -2.5f),
-        glm::vec3(-3.8f, -2.0f, -12.3f),
-        glm::vec3(2.4f, -0.4f, -3.5f),
-        glm::vec3(-1.7f, 3.0f, -7.5f),
-        glm::vec3(1.3f, -2.0f, -2.5f),
-        glm::vec3(1.5f, 2.0f, -2.5f),
-        glm::vec3(1.5f, 0.2f, -1.5f),
-        glm::vec3(-1.3f, 1.0f, -1.5f)};
+    // Use the cube mesh (handle 0)
+    GPUMesh& cubeMesh = m_meshes[0];
+    glBindVertexArray(cubeMesh.vao);
 
-    // ---- 4. Draw each cube with its own model matrix ----
-    glBindVertexArray(vao);
-
-    for (size_t i = 0; i < cubePositions.size(); i++)
-    {
-        glm::mat4 model = glm::mat4(1.0f);
-
-        // Translate
-        model = glm::translate(model, cubePositions[i]);
-
-        // Rotate: unique angle per cube
-        float angle = 20.0f * static_cast<float>(i);
-        // If cube index is 0, 3, 6, 9 (every 3rd), rotate over time
-        if (i % 3 == 0)
-        {
-            angle += time * 50.0f;
-        }
-        model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-
-        // Pass model matrix to shader
-        m_shader->setMat4("model", model);
-
-        // Draw the cube (36 vertices = 12 triangles)
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+    // Create instance data buffer (model matrix + color per instance)
+    struct InstanceData {
+        glm::mat4 model;
+        glm::vec4 color;
+    };
+    
+    std::vector<InstanceData> instanceData;
+    instanceData.reserve(instances.size());
+    
+    for (auto& inst : instances) {
+        instanceData.push_back({inst.modelMatrix, inst.color});
     }
 
+    // Create/update instance VBO
+    if (!m_instanceVBO) {
+        glGenBuffers(1, &m_instanceVBO);
+    }
+    
+    glBindBuffer(GL_ARRAY_BUFFER, m_instanceVBO);
+    glBufferData(GL_ARRAY_BUFFER, instanceData.size() * sizeof(InstanceData), 
+                 instanceData.data(), GL_DYNAMIC_DRAW);
+
+    // Setup instanced attributes
+    // mat4 instanceModel at location 3 (takes 4 slots: 3,4,5,6)
+    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)0);
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)(sizeof(glm::vec4)));
+    glEnableVertexAttribArray(4);
+    glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)(2 * sizeof(glm::vec4)));
+    glEnableVertexAttribArray(5);
+    glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)(3 * sizeof(glm::vec4)));
+    glEnableVertexAttribArray(6);
+    
+    // vec4 instanceColor at location 7
+    glVertexAttribPointer(7, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)(4 * sizeof(glm::vec4)));
+    glEnableVertexAttribArray(7);
+
+    // Mark attributes as instanced (one per instance, not per vertex)
+    for (int i = 3; i <= 7; ++i) {
+        glVertexAttribDivisor(i, 1);
+    }
+
+    // ONE draw call for ALL instances
+    glDrawArraysInstanced(GL_TRIANGLES, 0, cubeMesh.vertexCount, (GLsizei)instances.size());
+
+    // Cleanup
+    for (int i = 3; i <= 7; ++i) {
+        glVertexAttribDivisor(i, 0);
+    }
+    
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 }
 
-// -------------------- Stubs --------------------
+void IOpenGLRenderer::drawSingle(const RenderInstance& instance)
+{
+    drawInstanced({instance});
+}
 
-void IOpenGLRenderer::drawInstanced(const std::vector<RenderInstance> &) {}
-void IOpenGLRenderer::drawSingle(const RenderInstance &) {}
 void IOpenGLRenderer::unloadTexture(int) {}
 
 void IOpenGLRenderer::setLight(const RenderLight&) {
