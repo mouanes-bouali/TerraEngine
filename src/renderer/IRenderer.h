@@ -1,11 +1,15 @@
 #pragma once
 #include <glm/glm.hpp>
 #include <vector>
-/**/
+#include <cstdint>
+
+using MeshHandle = uint32_t;
+
 struct RenderInstance {
     glm::mat4 modelMatrix;   // where to draw
     glm::vec4 color;         // tint color
     int textureId = -1;      // -1 = solid color, >=0 = texture index
+    MeshHandle mesh = 0;     // which pre-loaded mesh to draw
 };
 
 struct RenderLight {
@@ -45,6 +49,10 @@ public:
 
     // For UI overlays, particles, or single objects
     virtual void drawSingle(const RenderInstance& instance) = 0;
+
+    // ----- Meshes -----
+    // Load a mesh from file, upload to GPU, return handle for later use
+    virtual MeshHandle loadMesh(const char* filepath) = 0;
 
     // ----- Textures -----
     virtual int loadTexture(const char* filepath) = 0;   // returns texture ID

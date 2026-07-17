@@ -21,6 +21,12 @@ public:
     const std::vector<EntityID>& ownerList() const;
     size_t count() const;
 
+    // DOD: direct access to sparse array for fast entity→dense index lookup
+    int32_t getSparseIndex(EntityID e) const {
+        if (e >= sparse.size()) return -1;
+        return sparse[e];
+    }
+
 private:
     static constexpr int32_t INVALID_INDEX = -1;
     std::vector<T> dense;
