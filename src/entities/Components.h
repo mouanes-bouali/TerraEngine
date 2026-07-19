@@ -40,9 +40,26 @@ struct CLifespan : Component {
     CLifespan(float rem, float tot) : remaining(rem), total(tot) {}
 };
 
+enum MaterialType : uint8_t {
+    MAT_SAND = 0,
+    MAT_GRASS = 1,
+    MAT_ROCK = 2,
+    MAT_SNOW = 3
+};
+
 struct CEnemy    : Component {};
 struct CPlayer   : Component {};
-struct CTile     : Component {};
+struct CTile     : Component {
+    float baseHeight = 0.0f;
+    float currentHeight = 0.0f;
+    float deformation = 0.0f;
+    bool isWalkable = true;
+    MaterialType material = MAT_GRASS;
+    
+    CTile() = default;
+    CTile(float base, float current, float deform, bool walk, MaterialType mat)
+        : baseHeight(base), currentHeight(current), deformation(deform), isWalkable(walk), material(mat) {}
+};
 struct CProjectile : Component {};
 struct CParticle : Component {};
 struct CBuilding : Component {};

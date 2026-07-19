@@ -21,8 +21,8 @@ public:
     EntityManager() = default;
     EntityManager(const EntityManager&) = delete;
     EntityManager& operator=(const EntityManager&) = delete;
-    EntityManager(EntityManager&&) = delete;
-    EntityManager& operator=(EntityManager&&) = delete;
+    EntityManager(EntityManager&&) = default;
+    EntityManager& operator=(EntityManager&&) = default;
 
     EntityID createEntity();
     void destroyEntity(EntityID e);
@@ -41,6 +41,7 @@ public:
     bool EntityAlive(EntityID e) const {
         return e < entitySignatures.size() &&( entitySignatures[e]& 1 )== 1;
     }
+    EntityID getNextID() const { return nextID; }
     bool matches(EntityID e, const Signature& systemSignature) const;
 
 private:
@@ -57,8 +58,18 @@ private:
         static inline const uint8_t ID = ComponentRegistry::assignNextID();
     };
 
+public:
+    template<SComponent T>
+    static uint8_t getComponentTypeID() {
+        return ComponentTypeID<T>::ID;
+    }
+
+    // Pool access for DOD systems
     template<SComponent T>
     ComponentPool<T>* getPool();
+
+    template<SComponent T>
+    const ComponentPool<T>* getPool() const;
 };
 
 // ============================================================
