@@ -1,16 +1,25 @@
 # Solum Engine — Design Overview
 
 ## 1. What It Is
-- One sentence: engine
-- One sentence: game
-- One sentence: what it proves
-
+- An Game engine for a top down survival game
+-using high performance 
 ## 2. The Problem
-- Table: 4 problems → Unity/Godot → Solum
+-already exisitng big game engines have a poor performance for a game that needs many objects
 
 ## 3. Architecture
-- One layer diagram
-- One bullet per layer
+- the engine uses a ECS and DOD architecture for a readable  and performance boost by avoiding creating objects that are resources heavy for the CPU -objects are scatrred in the memeory and the CPU needs to fetch the in the memory where the objects is pointed to.So we represent it like this:
+-Entites :
+any object is just an entityID number.we can check all the entities by going through an entites list only.
+
+-Components:
+The behaviours of the entities, represented as data (Transform component saves the object place,rotatio and scale in the 3D world )
+implemented using Structs. Each component saves entites IDs that implemented it, and consists of Dense and spare arrays for a complexity of O(1) fetching.
+
+-Systems:
+they implmenet the needed behaviours absed on the existing componenets(movement system moves entites with transform component)
+
+
+
 
 ## 4. Key Decisions
 - One line per ADR
