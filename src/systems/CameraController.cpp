@@ -1,8 +1,8 @@
-#include "CameraSystem.h"
+#include "CameraController.h"
 #include "platform/IInput.h"
 #include <glm/gtc/matrix_transform.hpp>
 
-CameraSystem::CameraSystem()
+CameraController::CameraController()
     : position(0.0f, 5.0f, 10.0f)
     , target(0.0f, 0.0f, 0.0f)
     , up(0.0f, 1.0f, 0.0f)
@@ -17,7 +17,7 @@ CameraSystem::CameraSystem()
 {
 }
 
-void CameraSystem::handleInput(IInput& input) {
+void CameraController::handleInput(IInput& input) {
     // Mouse drag for orbit (left button)
     if (input.isMouseButtonPressed(0)) {
         yaw   += input.getMouseDeltaX() * sensitivity;
@@ -28,7 +28,7 @@ void CameraSystem::handleInput(IInput& input) {
     distance -= input.getMouseWheelDelta() * 2.0f;
 }
 
-void CameraSystem::update(EntityManager& em, float dt) {
+void CameraController::update(float dt) {
     // Clamp pitch
     pitch = glm::clamp(pitch, minPitch, maxPitch);
     distance = glm::clamp(distance, minDistance, maxDistance);
@@ -42,10 +42,10 @@ void CameraSystem::update(EntityManager& em, float dt) {
     position.z = target.z + distance * cos(radPitch) * cos(radYaw);
 }
 
-glm::mat4 CameraSystem::getViewMatrix() const {
+glm::mat4 CameraController::getViewMatrix() const {
     return glm::lookAt(position, target, up);
 }
 
-glm::mat4 CameraSystem::getProjection(float aspect) const {
+glm::mat4 CameraController::getProjection(float aspect) const {
     return glm::perspective(glm::radians(45.0f), aspect, 0.1f, 1000.0f);
 }

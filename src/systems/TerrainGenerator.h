@@ -12,7 +12,7 @@ struct TerrainConfig {
     float noiseScale = 0.05f;    // frequency of terrain features
 };
 
-class TerrainSystem {
+class TerrainGenerator {
 public:
     TerrainConfig config;
     

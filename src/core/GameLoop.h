@@ -42,10 +42,10 @@ struct GameLoop
     int imguiCount;
     void init(float dt);
     void addUpdate(UpdateCallback cb);
-    void addInputUpdate(UpdateCallback cb, Window& window);
+    void addInputUpdate(UpdateCallback cb, Window &window);
     void addFixedUpdate(UpdateCallback cb);
     void addRender(RenderCallback cb);
     void addImGuiUpdate(UpdateCallback cb);
-    void run(Window &window, IInput& inputSystem);
+    void run(Window &window, IInput &inputSystem);
     void quit();
 };

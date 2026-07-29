@@ -1,24 +1,32 @@
 //What is this project
-this is a personalproject of making a costume 3D engine, for a top down survival game 
+A costume 3D game engine built for a 3D top-down survival game,optimized for rendering thousands of objects at 60 fps
 
 Why im building the project
-i'm building this engine for the game needs of performance 
-architect diagram
+existing engines(unity, unreal) are designed for general use.
+they waste memory and Cpu on features the game doesn't need.By building a costume engine, I control exactly what runs each frame (no garbage collection), no unnecessary physics, no editor overhead.
 
 3/How
--Reading about exstng similar projects 
--planing the project "applyng ECS and DOD
--building Systems that work togather (
-    Entity Manager
-    Rendering System
-    Tiles manager
-    Physics sytem
-    Ui System
-)
+**Research**
+Studied exisitng ECS (Unity DOTS, EnTT) to understand the patterns and 
+pitfalls.  
+**Architecture**
+Applied Entity-Component-System(ECS) for a cache-friendly data layout and Data Oriented Design for predictable performance, finally applying software engineering principals(Design patterns, SOLID) for a maintainable, scaleable, testable and readable
+**Implementation**
 
-Challanges and solutions
-learning C++ syntax
-linknig libirires
-making an extendable and changble systems
+**Implementation** — Built modular systems that operate on 
+   component data independently (low coupling) and does one job (high cohesion):
+   - Entity Manager (entity lifecycle)
+   - Render System (GPU instancing)
+   - Terrain System (procedural generation)
+   - Physics System (planned)
+   - UI System (ImGui overlay)
+
+**Challenges & Solutions**
+
+| Challenge | Solution |
+|-----------|----------|
+| Learning modern C++ syntax | Studied C++20 features (concepts, templates) through small practice projects |
+| Linking external libraries | Used CMake with FetchContent for automatic dependency management |
+| Building extensible systems | Designed around interfaces (IRenderer, IInput) so implementations can be swapped |
 
 

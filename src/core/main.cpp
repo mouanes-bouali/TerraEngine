@@ -5,8 +5,8 @@
 #include "platform/IInput.h"
 #include "platform/SFMLInputSystem.h"
 #include "systems/RenderSystem.h"
-#include "systems/CameraSystem.h"
-#include "systems/TerrainSystem.h"
+#include "systems/CameraController.h"
+#include "systems/TerrainGenerator.h"
 #include "entities/EntityManager.h"
 #include "entities/EntityBuilder.h"
 #include <iostream>
@@ -18,8 +18,8 @@ static IInput *g_input = nullptr;
 static EntityManager g_em;
 static RenderSystem g_renderSystem;
 static RenderContext g_renderCtx;
-static CameraSystem g_camera;
-static TerrainSystem g_terrain;
+static CameraController g_camera;
+static TerrainGenerator g_terrain;
 
 // Terrain parameters (exposed to UI)
 static int g_gridSize = 100;
@@ -63,8 +63,8 @@ int main()
     // ── Setup camera (isometric-like view) ──
     g_camera.target = {0.0f, 0.0f, 0.0f};
     g_camera.distance = 35.0f;
-    g_camera.yaw = -135.0f;   // diagonal view
-    g_camera.pitch = -45.0f;  // 45° angle
+    g_camera.yaw = -135.0f;  // diagonal view
+    g_camera.pitch = -45.0f; // 45° angle
 
     // ── Generate initial terrain ──
     g_terrain.config.gridSize = g_gridSize;
@@ -82,8 +82,6 @@ int main()
 
     // Initialize ImGui BEFORE starting loop
     ImGui::SFML::Init(window.handle);
-
-    // Render update
     loop.addRender([&](float /*alpha*/)
                    {
         // FPS counter
@@ -93,10 +91,10 @@ int main()
             g_fps = g_frameCount;
             g_frameCount = 0;
             g_fpsTime = 0.0f;
-        }
+          } 
         
         // 1. Update camera
-        g_camera.update(g_em, 0.016f);
+        g_camera.update( 0.016f);
         
         // 2. Set camera on renderer
         g_renderer->setCamera(g_camera.position, g_camera.target, g_camera.up);
@@ -151,8 +149,7 @@ int main()
         ImGui::SFML::Render(window.handle);
         
         // 7. Swap buffers
-        window.handle.display();
-    });
+        window.handle.display(); });
 
     loop.run(window, input);
 

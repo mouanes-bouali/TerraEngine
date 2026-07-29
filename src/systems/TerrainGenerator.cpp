@@ -1,4 +1,4 @@
-#include "TerrainSystem.h"
+#include "TerrainGenerator.h"
 #include "entities/Components.h"
 #include "systems/HeightMap.h"
 #include <cmath>

@@ -5,7 +5,8 @@
 #include "imgui/imgui.h"
 #include "imgui/imgui-SFML.h"
 
-void GameLoop::init(float dt) {
+void GameLoop::init(float dt)
+{
     fixedDt = dt;
     accumulator = 0.0f;
     running = true;
@@ -16,34 +17,48 @@ void GameLoop::init(float dt) {
     imguiCount = 0;
 }
 
-void GameLoop::addUpdate(UpdateCallback cb) {
-    if (updateCount < 8) updateCallbacks[updateCount++] = cb;
+void GameLoop::addUpdate(UpdateCallback cb)
+{
+    if (updateCount < 8)
+        updateCallbacks[updateCount++] = cb;
 }
-void GameLoop::addInputUpdate(UpdateCallback cb, Window& window) {
-    if (inputUpdateCount < 8) inputUpdateCallbacks[inputUpdateCount++] = cb;
-}
-
-void GameLoop::addFixedUpdate(UpdateCallback cb) {
-    if (fixedUpdateCount < 8) fixedUpdateCallbacks[fixedUpdateCount++] = cb;
-}
-
-void GameLoop::addRender(RenderCallback cb) {
-    if (renderCount < 8) renderCallbacks[renderCount++] = cb;
+void GameLoop::addInputUpdate(UpdateCallback cb, Window &window)
+{
+    if (inputUpdateCount < 8)
+        inputUpdateCallbacks[inputUpdateCount++] = cb;
 }
 
-void GameLoop::addImGuiUpdate(UpdateCallback cb) {
-    if (imguiCount < 8) imguiCallbacks[imguiCount++] = cb;
+void GameLoop::addFixedUpdate(UpdateCallback cb)
+{
+    if (fixedUpdateCount < 8)
+        fixedUpdateCallbacks[fixedUpdateCount++] = cb;
 }
 
-static float getDeltaTime() {
+void GameLoop::addRender(RenderCallback cb)
+{
+    if (renderCount < 8)
+        renderCallbacks[renderCount++] = cb;
+}
+
+void GameLoop::addImGuiUpdate(UpdateCallback cb)
+{
+    if (imguiCount < 8)
+        imguiCallbacks[imguiCount++] = cb;
+}
+
+static float getDeltaTime()
+{
     static sf::Clock clock;
     float dt = clock.restart().asSeconds();
-    if (dt > 0.25f) dt = 0.25f;
+    if (dt > 0.25f)
+        dt = 0.25f;
     return dt;
 }
 
-void GameLoop::run(Window& window, IInput& inputSystem) {
-    while (window.isOpen() && running) {
+void GameLoop::run(Window &window, IInput &inputSystem)
+{
+    while (window.isOpen() && running)
+    {
         window.pollEvents(inputSystem);
         float dt = getDeltaTime();
 
@@ -57,7 +72,8 @@ void GameLoop::run(Window& window, IInput& inputSystem) {
 
         // Fixed-timestep updates
         accumulator += dt;
-        while (accumulator >= fixedDt) {
+        while (accumulator >= fixedDt)
+        {
             for (int i = 0; i < fixedUpdateCount; ++i)
                 fixedUpdateCallbacks[i](fixedDt);
             accumulator -= fixedDt;
@@ -70,6 +86,7 @@ void GameLoop::run(Window& window, IInput& inputSystem) {
     }
 }
 
-void GameLoop::quit() {
+void GameLoop::quit()
+{
     running = false;
 }

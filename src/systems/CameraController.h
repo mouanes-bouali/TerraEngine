@@ -3,7 +3,7 @@
 #include "platform/IInput.h"
 #include <glm/glm.hpp>
 
-class CameraSystem {
+class CameraController {
 public:
     glm::vec3 position;
     glm::vec3 target;
@@ -17,9 +17,9 @@ public:
     float maxDistance;
     float sensitivity;
 
-    CameraSystem();
+    CameraController();
 
-    void update(EntityManager& em, float dt);
+    void update(float dt);
     void handleInput(IInput& input);
     glm::mat4 getViewMatrix() const;
     glm::mat4 getProjection(float aspect) const;
