@@ -24,6 +24,21 @@ void CameraController::handleInput(IInput& input) {
         pitch -= input.getMouseDeltaY() * sensitivity;
     }
     
+    // WASD to move the target (camera pan)
+    float moveSpeed = 0.5f;
+    if (input.isKeyPressed(KeyCode::W)) {
+        target.z -= moveSpeed;
+    }
+    if (input.isKeyPressed(KeyCode::S)) {
+        target.z += moveSpeed;
+    }
+    if (input.isKeyPressed(KeyCode::A)) {
+        target.x -= moveSpeed;
+    }
+    if (input.isKeyPressed(KeyCode::D)) {
+        target.x += moveSpeed;
+    }
+
     // Mouse wheel for zoom
     distance -= input.getMouseWheelDelta() * 2.0f;
 }
