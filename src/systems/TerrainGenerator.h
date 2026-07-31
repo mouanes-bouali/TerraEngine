@@ -2,6 +2,7 @@
 #include "entities/EntityManager.h"
 #include "entities/EntityBuilder.h"
 #include "renderer/IRenderer.h"
+#include "assets/MeshData.h"
 #include <glm/glm.hpp>
 
 struct TerrainConfig {
@@ -14,7 +15,7 @@ struct TerrainConfig {
 
 class TerrainGenerator {
 public:
-    TerrainConfig config;
+    TerrainConfig terrainConfig;
     
     void generate(EntityManager& em, EntityBuilder& builder, 
                   MeshHandle cubeMesh, int grassTex, int stoneTex, int sandTex);
@@ -28,4 +29,8 @@ public:
     void generateSquareDiamondTerrain(EntityManager& em, EntityBuilder& builder,
                                       MeshHandle cubeMesh, int resolution,
                                       float roughness, float amplitude);
+    
+    // Smooth terrain: generates ONE indexed mesh from a heightmap
+    // Returns MeshData (CPU side) — caller uploads to GPU via renderer->uploadMesh()
+    MeshData generateSmoothTerrain(int resolution, float roughness, float amplitude);
 };
