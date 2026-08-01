@@ -2,6 +2,7 @@
 #include <glm/glm.hpp>
 #include <vector>
 #include <cstdint>
+#include "assets/MeshData.h"
 
 using MeshHandle = uint32_t;
 
@@ -51,8 +52,14 @@ public:
     virtual void drawSingle(const RenderInstance& instance) = 0;
 
     // ----- Meshes -----
-    // Load a mesh from file, upload to GPU, return handle for later use
+    // Legacy: load a mesh from file, upload to GPU, return handle
     virtual MeshHandle loadMesh(const char* filepath) = 0;
+
+    // NEW: upload pre-parsed CPU mesh data to GPU, return handle.
+    // MeshLibrary (src/assets) owns the CPU-side data; the renderer
+    // only creates GL buffers from it. This decouples file parsing
+    // from GPU ownership.
+    virtual MeshHandle uploadMesh(const MeshData& mesh) = 0;
 
     // ----- Textures -----
     virtual int loadTexture(const char* filepath) = 0;   // returns texture ID

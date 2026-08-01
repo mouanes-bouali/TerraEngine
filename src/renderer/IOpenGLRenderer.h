@@ -18,8 +18,8 @@ struct RenderInstance;
 struct GPUMesh {
     GLuint vao = 0;
     GLuint vbo = 0;
-    GLuint ebo = 0;
-    int indexCount = 0;  // number of indices (0 = non-indexed, use vertexCount)
+    GLuint ebo = 0;       // 0 = no index buffer (non-indexed mesh)
+    int indexCount = 0;   // >0 = use glDrawElements, 0 = use glDrawArrays
     int vertexCount = 0;
 };
 
@@ -60,6 +60,7 @@ public:
 
     // Mesh loading
     MeshHandle loadMesh(const char* filepath) override;
+    MeshHandle uploadMesh(const MeshData& mesh) override;
 
 private:
     // Internal helpers

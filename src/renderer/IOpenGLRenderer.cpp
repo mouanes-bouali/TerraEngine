@@ -3,6 +3,7 @@
 #include <iostream>
 #include <cmath>
 #include <vector>
+#include <unordered_map>
 #include <glm/gtc/matrix_transform.hpp>
 #include <cmath>
 #include <fstream>
@@ -324,6 +325,67 @@ MeshHandle IOpenGLRenderer::loadMesh(const char* filepath)
     return handle;
 }
 
+// -------------------- Mesh Upload (from pre-parsed CPU data) --------------------
+
+MeshHandle IOpenGLRenderer::uploadMesh(const MeshData& mesh)
+{
+    if (mesh.vertices.empty())
+    {
+        std::cerr << "uploadMesh: no vertex data for mesh '" << mesh.name << "'\n";
+        return 0; // fall back to cube
+    }
+
+    GPUMesh gpu;
+    gpu.vertexCount = static_cast<int>(mesh.vertexCount);
+    gpu.indexCount  = static_cast<int>(mesh.indexCount);
+
+    glGenVertexArrays(1, &gpu.vao);
+    glGenBuffers(1, &gpu.vbo);
+
+    glBindVertexArray(gpu.vao);
+    glBindBuffer(GL_ARRAY_BUFFER, gpu.vbo);
+    glBufferData(GL_ARRAY_BUFFER,
+                 mesh.vertices.size() * sizeof(float),
+                 mesh.vertices.data(),
+                 GL_STATIC_DRAW);
+
+    // Position (3 floats)
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
+                          8 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    // Color (3 floats)
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE,
+                          8 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+    // TexCoord (2 floats)
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE,
+                          8 * sizeof(float), (void*)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
+
+    // Index buffer (EBO) — only if the mesh has indices
+    if (!mesh.indices.empty())
+    {
+        glGenBuffers(1, &gpu.ebo);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gpu.ebo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                     mesh.indices.size() * sizeof(uint32_t),
+                     mesh.indices.data(),
+                     GL_STATIC_DRAW);
+    }
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
+    MeshHandle handle = static_cast<MeshHandle>(m_meshes.size());
+    m_meshes.push_back(gpu);
+
+    std::cout << "uploadMesh: '" << mesh.name << "' → GPU handle "
+              << handle << " (" << gpu.vertexCount << " verts"
+              << (gpu.indexCount > 0 ? ", " + std::to_string(gpu.indexCount) + " indices" : "")
+              << ")\n";
+    return handle;
+}
+
 // -------------------- Texture Loading --------------------
 
 int IOpenGLRenderer::loadTexture(const char *path)
@@ -389,6 +451,11 @@ void IOpenGLRenderer::renderScene(float /*alpha*/)
 
 void IOpenGLRenderer::beginFrame()
 {
+    // Re-enable depth test (was disabled for ImGui last frame)
+    // This is CRITICAL — without it, objects behind others show through
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+
     // Light sky blue background
     glClearColor(0.53f, 0.81f, 0.92f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -416,60 +483,82 @@ void IOpenGLRenderer::drawInstanced(const std::vector<RenderInstance>& instances
     m_shader->setInt("ourTexture", 0);
     // Use vertex colors (no texture)
 
-    // Use the cube mesh (handle 0)
-    GPUMesh& cubeMesh = m_meshes[0];
-    glBindVertexArray(cubeMesh.vao);
-
     // Create instance data buffer (model matrix + color per instance)
     struct InstanceData {
         glm::mat4 model;
         glm::vec4 color;
     };
-    
-    std::vector<InstanceData> instanceData;
-    instanceData.reserve(instances.size());
-    
-    for (auto& inst : instances) {
-        instanceData.push_back({inst.modelMatrix, inst.color});
-    }
 
     // Create/update instance VBO
     if (!m_instanceVBO) {
         glGenBuffers(1, &m_instanceVBO);
     }
-    
-    glBindBuffer(GL_ARRAY_BUFFER, m_instanceVBO);
-    glBufferData(GL_ARRAY_BUFFER, instanceData.size() * sizeof(InstanceData), 
-                 instanceData.data(), GL_DYNAMIC_DRAW);
 
-    // Setup instanced attributes
-    // mat4 instanceModel at location 3 (takes 4 slots: 3,4,5,6)
-    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)0);
-    glEnableVertexAttribArray(3);
-    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)(sizeof(glm::vec4)));
-    glEnableVertexAttribArray(4);
-    glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)(2 * sizeof(glm::vec4)));
-    glEnableVertexAttribArray(5);
-    glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)(3 * sizeof(glm::vec4)));
-    glEnableVertexAttribArray(6);
-    
-    // vec4 instanceColor at location 7
-    glVertexAttribPointer(7, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)(4 * sizeof(glm::vec4)));
-    glEnableVertexAttribArray(7);
-
-    // Mark attributes as instanced (one per instance, not per vertex)
-    for (int i = 3; i <= 7; ++i) {
-        glVertexAttribDivisor(i, 1);
+    // Group instances by mesh handle so each mesh's VAO is bound only
+    // for its own instances (cheap: one glDrawArraysInstanced per mesh).
+    std::unordered_map<MeshHandle, std::vector<const RenderInstance*>> groups;
+    for (const auto& inst : instances) {
+        groups[inst.mesh].push_back(&inst);
     }
 
-    // ONE draw call for ALL instances
-    glDrawArraysInstanced(GL_TRIANGLES, 0, cubeMesh.vertexCount, (GLsizei)instances.size());
+    for (auto& [meshHandle, groupInstances] : groups) {
+        if (meshHandle >= m_meshes.size()) {
+            std::cerr << "drawInstanced: bad mesh handle " << meshHandle << "\n";
+            continue;
+        }
 
-    // Cleanup
-    for (int i = 3; i <= 7; ++i) {
-        glVertexAttribDivisor(i, 0);
+        GPUMesh& mesh = m_meshes[meshHandle];
+        glBindVertexArray(mesh.vao);
+
+        // Build instance data for THIS mesh group
+        std::vector<InstanceData> instanceData;
+        instanceData.reserve(groupInstances.size());
+        for (auto* inst : groupInstances) {
+            instanceData.push_back({inst->modelMatrix, inst->color});
+        }
+
+        glBindBuffer(GL_ARRAY_BUFFER, m_instanceVBO);
+        glBufferData(GL_ARRAY_BUFFER,
+                     instanceData.size() * sizeof(InstanceData),
+                     instanceData.data(),
+                     GL_DYNAMIC_DRAW);
+
+        // Setup instanced attributes
+        // mat4 instanceModel at location 3 (takes 4 slots: 3,4,5,6)
+        glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)0);
+        glEnableVertexAttribArray(3);
+        glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)(sizeof(glm::vec4)));
+        glEnableVertexAttribArray(4);
+        glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)(2 * sizeof(glm::vec4)));
+        glEnableVertexAttribArray(5);
+        glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)(3 * sizeof(glm::vec4)));
+        glEnableVertexAttribArray(6);
+
+        // vec4 instanceColor at location 7
+        glVertexAttribPointer(7, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)(4 * sizeof(glm::vec4)));
+        glEnableVertexAttribArray(7);
+
+        // Mark attributes as instanced (one per instance, not per vertex)
+        for (int i = 3; i <= 7; ++i) {
+            glVertexAttribDivisor(i, 1);
+        }
+
+        // Draw all instances of THIS mesh in one call
+        if (mesh.indexCount > 0) {
+            // Indexed mesh (e.g. smooth terrain) — use EBO
+            glDrawElementsInstanced(GL_TRIANGLES, mesh.indexCount,
+                                    GL_UNSIGNED_INT, 0, (GLsizei)groupInstances.size());
+        } else {
+            // Non-indexed mesh (e.g. cube) — use VBO directly
+            glDrawArraysInstanced(GL_TRIANGLES, 0, mesh.vertexCount, (GLsizei)groupInstances.size());
+        }
+
+        // Cleanup
+        for (int i = 3; i <= 7; ++i) {
+            glVertexAttribDivisor(i, 0);
+        }
     }
-    
+
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 }
