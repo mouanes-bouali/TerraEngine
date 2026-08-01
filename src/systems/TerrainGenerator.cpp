@@ -173,15 +173,15 @@ MeshData TerrainGenerator::generateSmoothTerrain(int resolution, float roughness
     std::cout << "Generating smooth terrain: " << resolution << "x" << resolution << "\n";
 
     // 1. Generate heightmap using Square Diamond algorithm
-    HeightMap heightMap(resolution);
-    heightMap.generateSquareDiamond(resolution, roughness, amplitude);
+    m_heightmap = HeightMap(resolution);
+    m_heightmap.generateSquareDiamond(resolution, roughness, amplitude);
 
     // Normalize to 0-1 range
-    float minH = *std::min_element(heightMap.heights.begin(), heightMap.heights.end());
-    float maxH = *std::max_element(heightMap.heights.begin(), heightMap.heights.end());
-    heightMap.normalize(minH, maxH);
+    float minH = *std::min_element(m_heightmap.heights.begin(), m_heightmap.heights.end());
+    float maxH = *std::max_element(m_heightmap.heights.begin(), m_heightmap.heights.end());
+    m_heightmap.normalize(minH, maxH);
 
-    int res = heightMap.resolution;  // actual resolution (may differ from requested)
+    int res = m_heightmap.resolution;  // actual resolution (may differ from requested)
     float halfSize = res / 2.0f;
     float heightScale = terrainConfig.heightScale;
 
@@ -193,31 +193,115 @@ MeshData TerrainGenerator::generateSmoothTerrain(int resolution, float roughness
         for (int x = 0; x < res; x++) {
             float worldX = (x - halfSize);
             float worldZ = (z - halfSize);
-            float h = heightMap.getHeight(x, z) * heightScale;
+            float h = m_heightmap.getHeight(x, z) * heightScale;
 
             // Position (x, height, z)
             terrain.vertices.push_back(worldX);
             terrain.vertices.push_back(h);
             terrain.vertices.push_back(worldZ);
 
-            // Color based on height (sand → grass → rock → snow)
+            // ── Textured, banded terrain colors with noise variation ──
+            // Instead of smooth blending, use hard bands with noise to
+            // create a more natural, texture-like appearance.
             float normalizedHeight = h / heightScale;  // 0.0 to 1.0
+
+            // Noise for texture variation (deterministic per grid point)
+            float noiseVal = sin(x * 1.3f) * cos(z * 1.7f) * 0.5f
+                           + sin(x * 3.1f + 2.0f) * cos(z * 2.9f + 1.0f) * 0.25f
+                           + sin(x * 7.3f + 4.0f) * cos(z * 6.7f + 3.0f) * 0.125f;
+
+            // Slope-based roughness: steep areas = more rocky
+            float hL = (x > 0) ? m_heightmap.getHeight(x-1, z) : h;
+            float hR = (x < res-1) ? m_heightmap.getHeight(x+1, z) : h;
+            float hD = (z > 0) ? m_heightmap.getHeight(x, z-1) : h;
+            float hU = (z < res-1) ? m_heightmap.getHeight(x, z+1) : h;
+            float slope = fabs(hR - hL) + fabs(hU - hD);
+
             glm::vec3 color;
-            if (normalizedHeight < 0.2f) {
-                color = {0.9f, 0.8f, 0.4f};  // sand
-            } else if (normalizedHeight < 0.5f) {
-                // Blend sand → grass
-                float t = (normalizedHeight - 0.2f) / 0.3f;
-                color = glm::mix(glm::vec3(0.9f, 0.8f, 0.4f), glm::vec3(0.2f, 0.7f, 0.2f), t);
-            } else if (normalizedHeight < 0.75f) {
-                // Blend grass → rock
-                float t = (normalizedHeight - 0.5f) / 0.25f;
-                color = glm::mix(glm::vec3(0.2f, 0.7f, 0.2f), glm::vec3(0.5f, 0.5f, 0.5f), t);
-            } else {
-                // Blend rock → snow
-                float t = (normalizedHeight - 0.75f) / 0.25f;
-                color = glm::mix(glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f), t);
+
+            if (normalizedHeight < 0.15f) {
+                // ── Sand band (beaches) — smooth, minimal texture ──
+                color = {0.80f, 0.74f, 0.50f};
+                // Very subtle variation — sand looks flat and smooth
+                color += noiseVal * 0.02f;
             }
+            else if (normalizedHeight < 0.40f) {
+                // ── Grass band — very smooth, no spikes ──
+                color = {0.18f, 0.58f, 0.18f};
+                // Use low-frequency noise only — no high-freq spikes
+                float smoothNoise = sin(x * 0.3f) * cos(z * 0.4f) * 0.5f;
+                color += smoothNoise * 0.02f;
+                // Gentle dry grass transition near sand (smooth blend)
+                if (normalizedHeight < 0.20f) {
+                    float dryness = (0.20f - normalizedHeight) / 0.05f;
+                    color = glm::mix(color, glm::vec3(0.60f, 0.62f, 0.35f), dryness * 0.4f);
+                }
+            }
+            else if (normalizedHeight < 0.65f) {
+                // ── Rock band (mountains) — sharp, distinct features ──
+                // Base rock color varies sharply between light and dark
+                float rockNoise = sin(x * 2.1f) * cos(z * 2.3f);
+                if (rockNoise > 0.0f) {
+                    color = {0.52f, 0.48f, 0.42f};  // lighter rock
+                } else {
+                    color = {0.35f, 0.32f, 0.28f};  // darker rock
+                }
+                // Sharp noise variation (quantized, not smooth)
+                color += noiseVal * 0.15f;
+                // Steep slopes = exposed dark rock (sharp transition)
+                if (slope > 0.12f) {
+                    color = {0.28f, 0.25f, 0.22f};  // dark cliff rock
+                    color += noiseVal * 0.08f;
+                }
+                // Sharp crack lines (hard threshold, not smooth)
+                float crack = sin(x * 4.3f + z * 3.7f) * sin(x * 2.1f - z * 3.3f);
+                if (crack > 0.6f) {
+                    color *= 0.65f;  // dark crack (sharp)
+                }
+                // Random rock spots (sharp contrast)
+                float spot = sin(x * 8.1f + 1.7f) * cos(z * 7.7f + 2.3f);
+                if (spot > 0.5f) {
+                    color += 0.12f;  // bright spot
+                } else if (spot < -0.5f) {
+                    color -= 0.10f;  // dark spot
+                }
+            }
+            else if (normalizedHeight < 0.85f) {
+                // ── High rock / scree band — sharp and craggy ──
+                float rockNoise = sin(x * 2.5f) * cos(z * 2.1f);
+                if (rockNoise > 0.0f) {
+                    color = {0.62f, 0.58f, 0.52f};  // lighter high rock
+                } else {
+                    color = {0.42f, 0.38f, 0.34f};  // darker high rock
+                }
+                // Sharp variation
+                color += noiseVal * 0.18f;
+                // Steep terrain = sharp dark rock
+                if (slope > 0.10f) {
+                    color = {0.30f, 0.27f, 0.24f};
+                    color += noiseVal * 0.10f;
+                }
+                // Sharp snow patches (hard threshold, not smooth blend)
+                float snowPatch = sin(x * 1.7f + 3.1f) * cos(z * 1.9f + 1.3f);
+                if (snowPatch > 0.3f) {
+                    color = {0.90f, 0.90f, 0.95f};  // sharp snow patch
+                }
+                // Rocky spots
+                float spot = sin(x * 6.1f) * cos(z * 5.7f);
+                if (spot > 0.4f) color += 0.10f;
+                else if (spot < -0.4f) color -= 0.08f;
+            }
+            else {
+                // ── Snow band (peaks) ──
+                color = {0.92f, 0.92f, 0.96f};
+                // Snow texture: subtle sparkle
+                color += noiseVal * 0.06f;
+                // Exposed rock on very steep peaks (wind-blown)
+                if (slope > 0.20f) {
+                    color = glm::mix(color, glm::vec3(0.50f, 0.47f, 0.43f), 0.6f);
+                }
+            }
+
             terrain.vertices.push_back(color.r);
             terrain.vertices.push_back(color.g);
             terrain.vertices.push_back(color.b);
@@ -255,4 +339,30 @@ MeshData TerrainGenerator::generateSmoothTerrain(int resolution, float roughness
               << terrain.indexCount / 3 << " triangles)\n";
 
     return terrain;
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// World-space height lookup for collision.
+//
+// Converts (worldX, worldZ) → (gridX, gridZ), clamps to the heightmap,
+// and returns the height * heightScale. Uses nearest-neighbor sampling
+// (a simple AABB/grid lookup — a perfect analogue of a tile-grid map).
+// ─────────────────────────────────────────────────────────────────────
+float TerrainGenerator::getWorldHeight(float worldX, float worldZ) const
+{
+    if (m_heightmap.heights.empty())
+        return terrainConfig.heightScale * 0.5f;
+
+    int res = m_heightmap.resolution;
+    float halfSize = res / 2.0f;
+
+    // Convert world → grid coordinates
+    int gx = static_cast<int>(std::floor(worldX + halfSize));
+    int gz = static_cast<int>(std::floor(worldZ + halfSize));
+
+    // Clamp to grid bounds
+    gx = std::clamp(gx, 0, res - 1);
+    gz = std::clamp(gz, 0, res - 1);
+
+    return m_heightmap.getHeight(gx, gz) * terrainConfig.heightScale;
 }

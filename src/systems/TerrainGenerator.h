@@ -3,6 +3,7 @@
 #include "entities/EntityBuilder.h"
 #include "renderer/IRenderer.h"
 #include "assets/MeshData.h"
+#include "systems/HeightMap.h"
 #include <glm/glm.hpp>
 
 struct TerrainConfig {
@@ -33,4 +34,13 @@ public:
     // Smooth terrain: generates ONE indexed mesh from a heightmap
     // Returns MeshData (CPU side) — caller uploads to GPU via renderer->uploadMesh()
     MeshData generateSmoothTerrain(int resolution, float roughness, float amplitude);
+
+    // World-space height lookup. After generateSmoothTerrain() is called,
+    // this returns the terrain Y at any (worldX, worldZ). Used by
+    // CollisionSystem. Returns heightScale * 0.5 if nothing generated.
+    float getWorldHeight(float worldX, float worldZ) const;
+    bool hasHeightmap() const { return !m_heightmap.heights.empty(); }
+
+private:
+    HeightMap m_heightmap{2};  // resized during generateSmoothTerrain()
 };
