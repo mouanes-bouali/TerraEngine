@@ -4,7 +4,7 @@
 // Custom key codes (not tied to any library)
 enum class KeyCode {
     Unknown = -1,
-    W, A, S, D,
+    W, A, S, D,Q,Z,
     Space, Enter, Escape,
     Up, Down, Left, Right,
     Shift, Control, Alt,

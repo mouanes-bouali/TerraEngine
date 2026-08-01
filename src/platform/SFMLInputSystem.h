@@ -15,8 +15,8 @@ private:
     // Translate SFML key to our KeyCode
     KeyCode sfmlToKeyCode(sf::Keyboard::Key sfmlKey) const {
         switch (sfmlKey) {
-            case sf::Keyboard::Key::W: return KeyCode::W;
-            case sf::Keyboard::Key::A: return KeyCode::A;
+            case sf::Keyboard::Key::Z: return KeyCode::Z;
+            case sf::Keyboard::Key::Q: return KeyCode::Q;
             case sf::Keyboard::Key::S: return KeyCode::S;
             case sf::Keyboard::Key::D: return KeyCode::D;
             case sf::Keyboard::Key::Space: return KeyCode::Space;

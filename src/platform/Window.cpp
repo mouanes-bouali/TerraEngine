@@ -14,6 +14,9 @@ Window::Window(const char* title, int w, int h, const sf::ContextSettings& setti
 
 void Window::pollEvents(IInput& inputSystem) {
     while (auto event = handle.pollEvent()) {
+        // Let ImGui process the event first
+        ImGui::SFML::ProcessEvent(handle, *event);
+        
         // Convert SFML event to our custom event types
         if (auto* mp = event->getIf<sf::Event::MouseMoved>()) {
             inputSystem.handleEvent(EVENT_MOUSE_MOVED, mp->position.x, mp->position.y);
