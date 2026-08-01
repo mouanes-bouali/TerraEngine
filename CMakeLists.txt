@@ -32,6 +32,7 @@ file(GLOB_RECURSE ENGINE_SOURCES
     src/platform/*.cpp
     src/systems/*.cpp
     src/entities/*.cpp
+    src/assets/*.cpp
 )
 
 # ----- Main executable -----

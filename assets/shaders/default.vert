@@ -16,6 +16,10 @@ out vec2 TexCoord;
 void main() {
     vec4 worldPos = instanceModel * vec4(aPos, 1.0);
     gl_Position = projection * view * worldPos;
-    ourColor = instanceColor.rgb;
+    // Multiply per-vertex color by instance color.
+    // When instanceColor is white (1,1,1), per-vertex colors show through
+    // (used for smooth terrain). When vertex colors are white, instance
+    // color shows through (used for cubes).
+    ourColor = aColor * instanceColor.rgb;
     TexCoord = aTexCoord;
 }
