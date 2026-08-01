@@ -35,9 +35,9 @@ public:
     // Square Diamond (Midpoint Displacement) Noise
     // Resolution must be 2^n + 1 (e.g., 65, 129, 257, 513)
     void generateSquareDiamond(int userRes, float roughness, float amplitude) {
-        // Find nearest 2^n + 1 that's <= userRes
+        // Find nearest 2^n + 1 that's >= userRes (round UP for max detail)
         int power = 1;
-        while (power * 2 + 1 <= userRes) {
+        while (power * 2 + 1 < userRes) {
             power *= 2;
         }
         int actualRes = power + 1;  // Now actualRes = 2^n + 1
