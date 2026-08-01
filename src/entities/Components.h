@@ -48,7 +48,24 @@ enum MaterialType : uint8_t {
 };
 
 struct CEnemy    : Component {};
-struct CPlayer   : Component {};
+struct CPlayer   : Component {
+    float jumpSpeed = 8.0f;
+    float moveSpeed = 5.0f;
+    CPlayer() = default;
+    CPlayer(float jump, float move) : jumpSpeed(jump), moveSpeed(move) {}
+};
+struct CAnim     : Component {};
+struct CCollider : Component {
+    float radius = 2.0f;       // sphere radius for simple collision
+    float offsetY = 0.0f;      // center of collider relative to transform
+    CCollider() = default;
+    CCollider(float r, float oy = 0.0f) : radius(r), offsetY(oy) {}
+};
+struct CVelocity : Component {
+    glm::vec3 velocity = {0.0f, 0.0f, 0.0f};
+    CVelocity() = default;
+    CVelocity(glm::vec3 v) : velocity(v) {}
+};
 struct CTile     : Component {
     float baseHeight = 0.0f;
     float currentHeight = 0.0f;
