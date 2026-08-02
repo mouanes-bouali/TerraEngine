@@ -10,40 +10,36 @@ void GameLoop::init(float dt)
     fixedDt = dt;
     accumulator = 0.0f;
     running = true;
-    updateCount = 0;
-    inputUpdateCount = 0;
-    fixedUpdateCount = 0;
-    renderCount = 0;
-    imguiCount = 0;
+    updateCallbacks.clear();
+    inputUpdateCallbacks.clear();
+    fixedUpdateCallbacks.clear();
+    renderCallbacks.clear();
+    imguiCallbacks.clear();
 }
 
 void GameLoop::addUpdate(UpdateCallback cb)
 {
-    if (updateCount < 8)
-        updateCallbacks[updateCount++] = cb;
+    updateCallbacks.push_back(std::move(cb));
 }
+
 void GameLoop::addInputUpdate(UpdateCallback cb, Window &window)
 {
-    if (inputUpdateCount < 8)
-        inputUpdateCallbacks[inputUpdateCount++] = cb;
+    inputUpdateCallbacks.push_back(std::move(cb));
 }
 
 void GameLoop::addFixedUpdate(UpdateCallback cb)
 {
-    if (fixedUpdateCount < 8)
-        fixedUpdateCallbacks[fixedUpdateCount++] = cb;
+    fixedUpdateCallbacks.push_back(std::move(cb));
 }
 
 void GameLoop::addRender(RenderCallback cb)
 {
-    if (renderCount < 8)
-        renderCallbacks[renderCount++] = cb;
+    renderCallbacks.push_back(std::move(cb));
 }
 
 void GameLoop::addImGuiUpdate(UpdateCallback cb)
 {
-    if (imguiCount < 8)
-        imguiCallbacks[imguiCount++] = cb;
+    imguiCallbacks.push_back(std::move(cb));
 }
 
 static float getDeltaTime()
@@ -63,26 +59,26 @@ void GameLoop::run(Window &window, IInput &inputSystem)
         float dt = getDeltaTime();
 
         // Variable-rate updates
-        for (int i = 0; i < updateCount; ++i)
-            updateCallbacks[i](dt);
+        for (auto& cb : updateCallbacks)
+            cb(dt);
 
         // Input updates
-        for (int i = 0; i < inputUpdateCount; ++i)
-            inputUpdateCallbacks[i](dt);
+        for (auto& cb : inputUpdateCallbacks)
+            cb(dt);
 
         // Fixed-timestep updates
         accumulator += dt;
         while (accumulator >= fixedDt)
         {
-            for (int i = 0; i < fixedUpdateCount; ++i)
-                fixedUpdateCallbacks[i](fixedDt);
+            for (auto& cb : fixedUpdateCallbacks)
+                cb(fixedDt);
             accumulator -= fixedDt;
         }
 
         // Render (draws to back buffer)
         float alpha = accumulator / fixedDt;
-        for (int i = 0; i < renderCount; ++i)
-            renderCallbacks[i](alpha);
+        for (auto& cb : renderCallbacks)
+            cb(alpha);
     }
 }
 

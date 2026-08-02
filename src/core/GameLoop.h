@@ -2,6 +2,9 @@
 #include <SFML/Graphics.hpp>
 #pragma once
 
+#include <functional>
+#include <vector>
+
 struct Window;     // forward declaration – tells the compiler "Window exists"
 struct ConfigData; // forward declaration – tells the compiler "ConfigData exists"
 class IInput;      // forward declaration
@@ -20,7 +23,7 @@ struct Shapes
     float radius;
     sf::Shape *drawable;
 };
-#include <functional>
+
 typedef std::function<void(float dt)> UpdateCallback;
 typedef std::function<void(float alpha)> RenderCallback;
 
@@ -30,16 +33,13 @@ struct GameLoop
     float accumulator;
     bool running;
 
-    UpdateCallback updateCallbacks[32];
-    UpdateCallback inputUpdateCallbacks[32];
-    int updateCount;
-    UpdateCallback fixedUpdateCallbacks[32];
-    int fixedUpdateCount;
-    RenderCallback renderCallbacks[32];
-    int renderCount;
-    int inputUpdateCount;
-    UpdateCallback imguiCallbacks[32];
-    int imguiCount;
+    // Dynamic callback lists — no fixed-size limit, no silent failure
+    std::vector<UpdateCallback> updateCallbacks;
+    std::vector<UpdateCallback> inputUpdateCallbacks;
+    std::vector<UpdateCallback> fixedUpdateCallbacks;
+    std::vector<RenderCallback> renderCallbacks;
+    std::vector<UpdateCallback> imguiCallbacks;
+
     void init(float dt);
     void addUpdate(UpdateCallback cb);
     void addInputUpdate(UpdateCallback cb, Window &window);
