@@ -1,17 +1,21 @@
 # Solum Engine — Design Overview
 
 ## 1. What It Is
-- An Game engine for a top down survival game
--using high performance 
-
+- "Engine name"is a costum high performance  game engine built specificlly for a massive scale, top down tactical survival game.player commands a group of workers to gather resources, build a base and protect the central core structural building(The Inhibitor). Every night, swarms of enemies attacks in defrent directions to destroy the base and more specifically the inhibitor, requiring good managment and strategy.
+As a result, it opperates with many entities(more than 10k),each one with its logic. 
+## 2. The Problem
+-The need of simulating thousands of active entities without being highly resources-intesive.
+## 2. The Problem in industry solutions:
+-OOP is not cpu cach friendly, it allocates objects in non contigious way in the memory, leading to constant CPU misses. it always trys to fetch data that it thinks will use it in one cycle (kinda same as trying to predict  Data).
+-Modern Unity ECS and unreal are complex and hides a lot of implementations, so it needs a lot of time spent on reading documentation.
+- 
 ### 2.1 Functional Requirements
 These define **what** the engine must do:
 
 ### 2.2 Non-Functional Requirements
 These define **how well** the engine must perform:
 
-## 2. The Problem
--already exisitng big game engines have a poor performance for a game that needs many objects
+
   
 
 
@@ -38,6 +42,12 @@ it owns the data of the view, it's work is to hundle the inputs and change the c
 it's responsible about the camera data so any other system like the Renderer System can get the camera config at runtime.
 
 
+the renderer:
+the engine starts and reads all the 3D models and sends them the GPU VRAM than
+
+it loopls through a rendering pipline:
+update the camera postion and projection
+RenderSystems gets the entities Transforms that are renderable, and creates for each entity a matrix4 and passes it to the Renderer so it knows where to draw each entity
 
 
 
@@ -70,3 +80,10 @@ The engine follows Data-Oriented Design rules to maximize performance. the CPU c
 
 ## 9. Links
 - Full
+
+
+
+/// Writing Rules///
+-Eliminate weak verbs like: implementation, it composes long boring sentences
+-Write small clear paragraphs to avoid gramatical errors.
+-Use imp
