@@ -16,6 +16,8 @@
 #include "imgui/imgui.h"
 #include "imgui/imgui-SFML.h"
 
+struct GameLoop;  // forward declaration
+
 // ── Engine Mode: Edit vs Play ──
 enum class EngineMode { Edit, Play };
 
