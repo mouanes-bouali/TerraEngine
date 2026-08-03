@@ -1,7 +1,6 @@
 #include "api/Engine.h"
 #include "api/EntityBuilder.h"
 #include "platform/SFMLInputSystem.h"
-#include "renderer/IOpenGLRenderer.h"
 #include "assets/MeshLibrary.h"
 #include <iostream>
 #include <glad/glad.h>
