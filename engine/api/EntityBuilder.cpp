@@ -79,6 +79,12 @@ EntityBuilder& EntityBuilder::makeBuilding()
     return *this;
 }
 
+EntityBuilder& EntityBuilder::setTag(const std::string& name, const std::string& type)
+{
+    internal().addComponent<CTag>(m_id, CTag{name, type});
+    return *this;
+}
+
 EntityBuilder& EntityBuilder::addGravity(float strength, float weight)
 {
     internal().addComponent<CGravity>(m_id, CGravity{strength, weight});

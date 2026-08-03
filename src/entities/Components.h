@@ -81,6 +81,16 @@ struct CProjectile : Component {};
 struct CParticle : Component {};
 struct CBuilding : Component {};
 
+// Name + type tag for the editor (entity identity)
+struct CTag : Component {
+    std::string name = "Unnamed";
+    std::string type = "entity";  // "player", "enemy", "building", "tree"
+
+    CTag() = default;
+    CTag(const std::string& n, const std::string& t = "entity")
+        : name(n), type(t) {}
+};
+
 // Links an entity to its pre-uploaded GPU mesh/texture
 struct CRenderable : Component {
     uint32_t meshHandle = 0;     // index into renderer's mesh array

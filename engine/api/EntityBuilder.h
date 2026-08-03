@@ -37,6 +37,7 @@ public:
     EntityBuilder& makePlayer(float jumpSpeed = 8.0f, float moveSpeed = 5.0f);
     EntityBuilder& makeEnemy();
     EntityBuilder& makeBuilding();
+    EntityBuilder& setTag(const std::string& name, const std::string& type = "entity");
     EntityBuilder& addGravity(float strength = 9.8f, float weight = 1.0f);
     EntityBuilder& addCollider(float radius = 0.5f, float offsetY = 0.0f);
     EntityBuilder& tagHealth(int current = 100, int max = 100);
