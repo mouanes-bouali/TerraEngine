@@ -1,6 +1,8 @@
 #pragma once
-#include "api/Engine.h"
 #include "entities/Components.h"
+
+// Forward declaration — avoids circular include with Engine.h
+class Engine;
 
 // ─────────────────────────────────────────────────────────────────────
 // SelectionSystem — click-to-select and drag-to-move entities.

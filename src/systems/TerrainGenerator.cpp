@@ -1,5 +1,6 @@
 #include "TerrainGenerator.h"
 #include "entities/Components.h"
+#include "entities/EntityBuilder.h"
 #include "systems/HeightMap.h"
 #include <cmath>
 #include <algorithm>
@@ -25,7 +26,7 @@ int TerrainGenerator::getMaterial(float height) const {
     return MAT_SNOW;
 }
 
-void TerrainGenerator::generate(EntityManager& em, EntityBuilder& builder,
+void TerrainGenerator::generate(EntityManager& em, LegacyEntityBuilder& builder,
                               MeshHandle cubeMesh, int grassTex, int stoneTex, int sandTex) {
     std::cout << "Terrain config: gridSize=" << terrainConfig.gridSize 
               << ", tileSize=" << terrainConfig.tileSize 
@@ -107,7 +108,7 @@ void TerrainGenerator::generate(EntityManager& em, EntityBuilder& builder,
     std::cout << "Height range: " << minHeight << " to " << maxHeight << "\n";
 }
 
-void TerrainGenerator::generateSquareDiamondTerrain(EntityManager& em, EntityBuilder& builder,
+void TerrainGenerator::generateSquareDiamondTerrain(EntityManager& em, LegacyEntityBuilder& builder,
                                                    MeshHandle cubeMesh, int resolution,
                                                    float roughness, float amplitude) {
     std::cout << "Generating Square Diamond terrain: " << resolution << "x" << resolution << "\n";

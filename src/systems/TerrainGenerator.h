@@ -1,10 +1,12 @@
 #pragma once
 #include "entities/EntityManager.h"
-#include "entities/EntityBuilder.h"
 #include "renderer/IRenderer.h"
 #include "assets/MeshData.h"
 #include "systems/HeightMap.h"
 #include <glm/glm.hpp>
+
+// Forward declaration (only used by reference in legacy generate methods)
+class LegacyEntityBuilder;
 
 struct TerrainConfig {
     float mapSize = 100.0f;      // world units
@@ -18,7 +20,7 @@ class TerrainGenerator {
 public:
     TerrainConfig terrainConfig;
     
-    void generate(EntityManager& em, EntityBuilder& builder, 
+    void generate(EntityManager& em, LegacyEntityBuilder& builder, 
                   MeshHandle cubeMesh, int grassTex, int stoneTex, int sandTex);
     
     // Simple noise function (replace with Perlin/Simplex later)
@@ -27,7 +29,7 @@ public:
     int getMaterial(float height) const;
     
     // Square Diamond noise (much better terrain)
-    void generateSquareDiamondTerrain(EntityManager& em, EntityBuilder& builder,
+    void generateSquareDiamondTerrain(EntityManager& em, LegacyEntityBuilder& builder,
                                       MeshHandle cubeMesh, int resolution,
                                       float roughness, float amplitude);
     

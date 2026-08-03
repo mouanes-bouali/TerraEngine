@@ -9,9 +9,9 @@
 #include "systems/CameraController.h"
 #include "systems/RenderSystem.h"
 #include "renderer/RenderPipeline.h"
-#include "editor/ui/EntityCreatorPanel.h"
-#include "editor/ui/InspectorPanel.h"
-#include "editor/systems/SelectionSystem.h"
+#include "ui/EntityCreatorPanel.h"
+#include "ui/InspectorPanel.h"
+#include "systems/SelectionSystem.h"
 #include <memory>
 
 // ─────────────────────────────────────────────────────────────────────

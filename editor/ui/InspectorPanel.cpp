@@ -1,4 +1,5 @@
 #include "ui/InspectorPanel.h"
+#include "api/Engine.h"
 #include <cstring>
 #include <iostream>
 

@@ -63,7 +63,7 @@ bool GameApp::init()
     ctx.terrainHandle = ctx.renderer->uploadMesh(terrainMesh);
 
     // Create ONE entity for the entire terrain
-    EntityBuilder builder(ctx.em);
+    LegacyEntityBuilder builder(ctx.em);
     builder()
         .with(CTransform{0, 0, 0, 0, 1, 1, 1})
         .with(CRenderable{ctx.terrainHandle, -1, {1, 1, 1, 1}})
@@ -241,7 +241,7 @@ void GameApp::renderEditorUI()
         ImGui::ColorEdit3("Color", color);
 
         if (ImGui::Button("Create Entity")) {
-            EntityBuilder builder(ctx.em);
+            LegacyEntityBuilder builder(ctx.em);
             uint32_t gpuHandle = (uint32_t)selectedMesh + 1;
             builder()
                 .with(CTransform{posX, posY, posZ, 0, scale, scale, scale})

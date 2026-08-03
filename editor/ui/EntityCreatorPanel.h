@@ -1,6 +1,8 @@
 #pragma once
-#include "api/Engine.h"
 #include <imgui.h>
+
+// Forward declaration — avoids circular include with Engine.h
+class Engine;
 
 // ─────────────────────────────────────────────────────────────────────
 // EntityCreatorPanel — ImGui panel for creating entities visually.

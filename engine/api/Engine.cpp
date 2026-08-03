@@ -1,5 +1,6 @@
 #include "api/Engine.h"
 #include "api/EntityBuilder.h"
+#include "renderer/IOpenGLRenderer.h"
 #include "platform/SFMLInputSystem.h"
 #include "assets/MeshLibrary.h"
 #include <iostream>
