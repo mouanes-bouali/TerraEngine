@@ -1,5 +1,6 @@
 #include "ui/EntityCreatorPanel.h"
 #include "api/EntityBuilder.h"
+#include "api/WorldSerializer.h"
 #include <iostream>
 
 void EntityCreatorPanel::render(Engine& engine)
