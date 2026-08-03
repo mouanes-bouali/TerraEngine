@@ -9,6 +9,9 @@
 #include "systems/CameraController.h"
 #include "systems/RenderSystem.h"
 #include "renderer/RenderPipeline.h"
+#include "editor/ui/EntityCreatorPanel.h"
+#include "editor/ui/InspectorPanel.h"
+#include "editor/systems/SelectionSystem.h"
 #include <memory>
 
 // ─────────────────────────────────────────────────────────────────────
@@ -73,4 +76,9 @@ private:
     std::unique_ptr<RenderPipeline> m_pipeline;
     EngineMode m_mode = EngineMode::Edit;
     bool m_initialized = false;
+
+    // Editor panels (Edit mode only)
+    EntityCreatorPanel m_entityCreator;
+    InspectorPanel m_inspector;
+    SelectionSystem m_selection;
 };

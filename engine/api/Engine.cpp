@@ -131,6 +131,15 @@ void Engine::run()
         ImGui::Text("Entities: %u", m_scene.entityCount());
         ImGui::Text("Press F5 to toggle Edit/Play");
         ImGui::End();
+
+        // Editor panels (Edit mode only)
+        if (m_mode == EngineMode::Edit) {
+            m_selection.update(*this);
+            m_inspector.setSelected(m_selection.getSelected());
+            m_entityCreator.render(*this);
+            m_inspector.render(*this);
+        }
+
         ImGui::SFML::Render();
 
         // Reset framebuffer binding for next frame
