@@ -8,6 +8,7 @@ enum class KeyCode {
     Space, Enter, Escape,
     Up, Down, Left, Right,
     Shift, Control, Alt,
+    F5,
     Count  // Keep last
 };
 

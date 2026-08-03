@@ -45,6 +45,7 @@ void Window::pollEvents(IInput& inputSystem) {
                 case sf::Keyboard::Key::Down: code = KeyCode::Down; break;
                 case sf::Keyboard::Key::Left: code = KeyCode::Left; break;
                 case sf::Keyboard::Key::Right: code = KeyCode::Right; break;
+                case sf::Keyboard::Key::F5: code = KeyCode::F5; break;
                 default: break;
             }
             inputSystem.handleEvent(EVENT_KEY_DOWN, static_cast<int>(code), 0);
@@ -63,6 +64,7 @@ void Window::pollEvents(IInput& inputSystem) {
                 case sf::Keyboard::Key::Down: code = KeyCode::Down; break;
                 case sf::Keyboard::Key::Left: code = KeyCode::Left; break;
                 case sf::Keyboard::Key::Right: code = KeyCode::Right; break;
+                case sf::Keyboard::Key::F5: code = KeyCode::F5; break;
                 default: break;
             }
             inputSystem.handleEvent(EVENT_KEY_UP, static_cast<int>(code), 0);
