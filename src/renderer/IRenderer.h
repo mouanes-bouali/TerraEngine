@@ -61,6 +61,11 @@ public:
     // from GPU ownership.
     virtual MeshHandle uploadMesh(const MeshData& mesh) = 0;
 
+    // Update an existing mesh's GPU buffers in-place (keeps the same handle).
+    // Used by the editor to sculpt terrain or modify geometry without
+    // recreating the VAO/VBO. The handle must be valid (from uploadMesh).
+    virtual void updateMesh(MeshHandle handle, const MeshData& mesh) = 0;
+
     // ----- Textures -----
     virtual int loadTexture(const char* filepath) = 0;   // returns texture ID
     virtual void unloadTexture(int textureId) = 0;

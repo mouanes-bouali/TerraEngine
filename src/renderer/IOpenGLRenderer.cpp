@@ -386,6 +386,53 @@ MeshHandle IOpenGLRenderer::uploadMesh(const MeshData& mesh)
     return handle;
 }
 
+// -------------------- Mesh Update (in-place, keeps handle) --------------------
+
+void IOpenGLRenderer::updateMesh(MeshHandle handle, const MeshData& mesh)
+{
+    if (handle >= m_meshes.size()) {
+        std::cerr << "updateMesh: invalid handle " << handle << "\n";
+        return;
+    }
+    if (mesh.vertices.empty()) {
+        std::cerr << "updateMesh: no vertex data for mesh '" << mesh.name << "'\n";
+        return;
+    }
+
+    GPUMesh& gpu = m_meshes[handle];
+
+    // Update vertex data in-place (keeps the same VBO/VAO)
+    glBindBuffer(GL_ARRAY_BUFFER, gpu.vbo);
+    glBufferData(GL_ARRAY_BUFFER,
+                 mesh.vertices.size() * sizeof(float),
+                 mesh.vertices.data(),
+                 GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    // Update index buffer if the mesh has indices
+    if (!mesh.indices.empty()) {
+        if (gpu.ebo == 0) {
+            glGenBuffers(1, &gpu.ebo);
+        }
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gpu.ebo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                     mesh.indices.size() * sizeof(uint32_t),
+                     mesh.indices.data(),
+                     GL_STATIC_DRAW);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+        gpu.indexCount = static_cast<int>(mesh.indexCount);
+    } else {
+        gpu.indexCount = 0;
+    }
+
+    gpu.vertexCount = static_cast<int>(mesh.vertexCount);
+
+    std::cout << "updateMesh: '" << mesh.name << "' (handle " << handle
+              << ") updated in-place — " << gpu.vertexCount << " verts"
+              << (gpu.indexCount > 0 ? ", " + std::to_string(gpu.indexCount) + " indices" : "")
+              << "\n";
+}
+
 // -------------------- Texture Loading --------------------
 
 int IOpenGLRenderer::loadTexture(const char *path)

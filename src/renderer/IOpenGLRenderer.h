@@ -61,6 +61,7 @@ public:
     // Mesh loading
     MeshHandle loadMesh(const char* filepath) override;
     MeshHandle uploadMesh(const MeshData& mesh) override;
+    void updateMesh(MeshHandle handle, const MeshData& mesh) override;
 
 private:
     // Internal helpers
