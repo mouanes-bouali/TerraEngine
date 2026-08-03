@@ -34,6 +34,8 @@ file(GLOB_RECURSE ENGINE_SOURCES
     src/entities/*.cpp
     src/assets/*.cpp
     engine/api/*.cpp
+    editor/ui/*.cpp
+    editor/systems/*.cpp
 )
 
 # ----- Main executable -----
