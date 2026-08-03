@@ -1,11 +1,11 @@
 #include "platform/Window.h"
-#include "core/GameApp.h"
+#include "api/Engine.h"
 #include <iostream>
 
 // ── Main Entry Point ──
-// Just glue: create window, init GameApp, run. All engine logic
-// lives in GameApp (src/core/GameApp.cpp) so the Level Editor can
-// be a separate layer on top.
+// Pure glue: create window, init the Engine facade, run.
+// All engine logic lives behind Engine::get() — game code never
+// touches ECS, renderer, or systems directly.
 int main() {
     try {
         // 1. Create window
@@ -16,18 +16,18 @@ int main() {
         settings.attributeFlags = sf::ContextSettings::Default;
         Window window("Solum Engine", 1280, 720, settings);
 
-        // 2. Initialize the application layer
-        GameApp game(window);
-        if (!game.init()) {
-            std::cerr << "GameApp init failed\n";
+        // 2. Initialize the engine facade
+        auto& engine = Engine::get();
+        if (!engine.init(window)) {
+            std::cerr << "Engine init failed\n";
             return -1;
         }
 
         // 3. Run the game (blocks until window closes)
-        game.run();
+        engine.run();
 
         // 4. Cleanup
-        game.shutdown();
+        engine.shutdown();
         return 0;
 
     } catch (const std::exception& e) {

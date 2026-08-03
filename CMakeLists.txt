@@ -33,11 +33,12 @@ file(GLOB_RECURSE ENGINE_SOURCES
     src/systems/*.cpp
     src/entities/*.cpp
     src/assets/*.cpp
+    engine/api/*.cpp
 )
 
 # ----- Main executable -----
 add_executable(SolumEngine ${ENGINE_SOURCES})
-target_include_directories(SolumEngine PUBLIC src)
+target_include_directories(SolumEngine PUBLIC src engine)
 target_link_libraries(SolumEngine PUBLIC
     SFML::Graphics
     SFML::Window

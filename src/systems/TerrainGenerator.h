@@ -41,6 +41,10 @@ public:
     float getWorldHeight(float worldX, float worldZ) const;
     bool hasHeightmap() const { return !m_heightmap.heights.empty(); }
 
+    // Expose the heightmap for sculpting (TerrainAPI uses this)
+    HeightMap& internalHeightmap() { return m_heightmap; }
+    const HeightMap& internalHeightmap() const { return m_heightmap; }
+
 private:
     HeightMap m_heightmap{2};  // resized during generateSmoothTerrain()
 };
