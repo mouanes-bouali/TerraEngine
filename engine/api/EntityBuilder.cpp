@@ -25,7 +25,16 @@ EntityBuilder& EntityBuilder::setPosition(float x, float y, float z)
 EntityBuilder& EntityBuilder::setRotation(float angle)
 {
     auto& t = internal().getComponent<CTransform>(m_id);
-    t.rotation = angle;
+    t.rotationY = angle;
+    return *this;
+}
+
+EntityBuilder& EntityBuilder::setRotation(float pitch, float yaw, float roll)
+{
+    auto& t = internal().getComponent<CTransform>(m_id);
+    t.rotationX = pitch;
+    t.rotationY = yaw;
+    t.rotationZ = roll;
     return *this;
 }
 

@@ -26,6 +26,7 @@ public:
     // ── Transform ──
     EntityBuilder& setPosition(float x, float y, float z);
     EntityBuilder& setRotation(float angle);
+    EntityBuilder& setRotation(float pitch, float yaw, float roll);
     EntityBuilder& setScale(float x, float y, float z);
 
     // ── Mesh / Renderable ──

@@ -14,13 +14,15 @@ constexpr EntityID INVALID_ENTITY = UINT32_MAX;
 
 struct CTransform : Component {
     float x = 0.0f, y = 0.0f, z = 0.0f;
-    float rotation = 0.0f;
+    float rotationX = 0.0f;  // pitch
+    float rotationY = 0.0f;  // yaw
+    float rotationZ = 0.0f;  // roll
     float scaleX = 1.0f, scaleY = 1.0f, scaleZ = 1.0f;
-    
+
     CTransform() = default;
     CTransform(float x, float y, float z = 0.0f,
-               float rot = 0.0f, float sx = 1.0f, float sy = 1.0f, float sz = 1.0f)
-        : x(x), y(y), z(z), rotation(rot), scaleX(sx), scaleY(sy), scaleZ(sz) {}
+               float rotY = 0.0f, float sx = 1.0f, float sy = 1.0f, float sz = 1.0f)
+        : x(x), y(y), z(z), rotationY(rotY), scaleX(sx), scaleY(sy), scaleZ(sz) {}
 };
 
 struct CHealth : Component {

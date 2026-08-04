@@ -40,7 +40,9 @@ void RenderSystem::collect(EntityManager& em, RenderContext& ctx)
 
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(t.x, t.y, t.z));
-        model = glm::rotate(model, t.rotation, glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(t.rotationX), glm::vec3(1.0f, 0.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(t.rotationY), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(t.rotationZ), glm::vec3(0.0f, 0.0f, 1.0f));
         model = glm::scale(model, glm::vec3(t.scaleX, t.scaleY, t.scaleZ));
 
         ctx.opaque.push_back({

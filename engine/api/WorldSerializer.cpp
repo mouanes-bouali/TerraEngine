@@ -46,7 +46,7 @@ EntityData WorldSerializer::extractEntity(Engine& engine, EntityID id)
     // Transform
     if (scene.has<CTransform>(id)) {
         auto& t = scene.get<CTransform>(id);
-        ed.transform = {t.x, t.y, t.z, t.rotation, t.scaleX, t.scaleY, t.scaleZ};
+        ed.transform = {t.x, t.y, t.z, t.rotationX, t.rotationY, t.rotationZ, t.scaleX, t.scaleY, t.scaleZ};
     }
 
     // Mesh/Renderable
@@ -143,7 +143,7 @@ void WorldSerializer::importWorld(Engine& engine, const WorldData& world)
     for (const auto& ed : world.entities) {
         auto builder = scene.create()
             .setPosition(ed.transform.x, ed.transform.y, ed.transform.z)
-            .setRotation(ed.transform.rotation)
+            .setRotation(ed.transform.rotationX, ed.transform.rotationY, ed.transform.rotationZ)
             .setScale(ed.transform.scaleX, ed.transform.scaleY, ed.transform.scaleZ)
             .setTag(ed.name, ed.type);
 
@@ -216,7 +216,9 @@ std::string WorldSerializer::worldToJson(const WorldData& world)
            << "\"x\":" << fmt(ed.transform.x)
            << ",\"y\":" << fmt(ed.transform.y)
            << ",\"z\":" << fmt(ed.transform.z)
-           << ",\"rotation\":" << fmt(ed.transform.rotation)
+           << ",\"rotationX\":" << fmt(ed.transform.rotationX)
+           << ",\"rotationY\":" << fmt(ed.transform.rotationY)
+           << ",\"rotationZ\":" << fmt(ed.transform.rotationZ)
            << ",\"scaleX\":" << fmt(ed.transform.scaleX)
            << ",\"scaleY\":" << fmt(ed.transform.scaleY)
            << ",\"scaleZ\":" << fmt(ed.transform.scaleZ)
@@ -354,7 +356,9 @@ WorldData WorldSerializer::jsonToWorld(const std::string& json)
             ed.transform.x = extractFloat(block, "x");
             ed.transform.y = extractFloat(block, "y");
             ed.transform.z = extractFloat(block, "z");
-            ed.transform.rotation = extractFloat(block, "rotation");
+            ed.transform.rotationX = extractFloat(block, "rotationX");
+            ed.transform.rotationY = extractFloat(block, "rotationY");
+            ed.transform.rotationZ = extractFloat(block, "rotationZ");
             ed.transform.scaleX = extractFloat(block, "scaleX");
             ed.transform.scaleY = extractFloat(block, "scaleY");
             ed.transform.scaleZ = extractFloat(block, "scaleZ");

@@ -43,7 +43,7 @@ void InspectorPanel::render(Engine& engine)
         auto& t = scene.get<CTransform>(m_selected);
         if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen)) {
             ImGui::DragFloat3("Position", &t.x, 0.1f);
-            ImGui::DragFloat("Rotation", &t.rotation, 0.1f);
+            ImGui::DragFloat3("Rotation (XYZ)", &t.rotationX, 0.1f);
             ImGui::DragFloat3("Scale", &t.scaleX, 0.1f);
         }
     }

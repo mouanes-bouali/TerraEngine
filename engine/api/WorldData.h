@@ -16,9 +16,11 @@
 
 // ── Component Data (Serializable) ──
 struct TransformData {
-    float x = 0.0f, y = 0.0f, z = 0.0f;
-    float rotation = 0.0f;
-    float scaleX = 1.0f, scaleY = 1.0f, scaleZ = 1.0f;
+    float x = 0, y = 0, z = 0;
+    float rotationX = 0;  // pitch
+    float rotationY = 0;  // yaw
+    float rotationZ = 0;  // roll
+    float scaleX = 1, scaleY = 1, scaleZ = 1;
 };
 
 struct MeshRefData {
