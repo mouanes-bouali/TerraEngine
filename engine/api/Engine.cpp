@@ -138,6 +138,7 @@ void Engine::run()
             m_selection.update(*this);
             m_inspector.setSelected(m_selection.getSelected());
             m_entityCreator.render(*this);
+            m_entityList.render(*this, m_selection);
             m_inspector.render(*this);
         }
 

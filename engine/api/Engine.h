@@ -11,6 +11,7 @@
 #include "renderer/RenderPipeline.h"
 #include "ui/EntityCreatorPanel.h"
 #include "ui/InspectorPanel.h"
+#include "ui/EntityListPanel.h"
 #include "systems/SelectionSystem.h"
 #include <memory>
 
@@ -80,5 +81,6 @@ private:
     // Editor panels (Edit mode only)
     EntityCreatorPanel m_entityCreator;
     InspectorPanel m_inspector;
+    EntityListPanel m_entityList;
     SelectionSystem m_selection;
 };
