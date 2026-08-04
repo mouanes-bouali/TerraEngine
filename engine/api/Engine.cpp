@@ -1,9 +1,11 @@
 #include "api/Engine.h"
 #include "api/EntityBuilder.h"
+#include "api/WorldSerializer.h"
 #include "renderer/IOpenGLRenderer.h"
 #include "platform/SFMLInputSystem.h"
 #include "assets/MeshLibrary.h"
 #include <iostream>
+#include <fstream>
 #include <glad/glad.h>
 #include "imgui/imgui.h"
 #include "imgui/imgui-SFML.h"
@@ -41,12 +43,12 @@ bool Engine::init(Window& window)
     m_camera.yaw = -135.0f;
     m_camera.pitch = 54.0f;
 
-    // ── Load meshes from assets/meshes/ ──
-    MeshLibrary meshLibrary;
-    meshLibrary.scanFolder("assets/meshes");
-    for (const auto& mesh : meshLibrary.all()) {
+    // ── Load meshes from assets/meshes/ into the persistent MeshLibrary ──
+    m_meshLibrary.scanFolder("assets/meshes");
+    for (const auto& mesh : m_meshLibrary.all()) {
         m_renderer.uploadMesh(mesh);
     }
+    std::cout << "Loaded " << m_meshLibrary.count() << " meshes from assets/meshes/\n";
 
     // ── Generate + upload terrain ──
     m_terrain.bind(&openGLRenderer);
@@ -55,35 +57,50 @@ bool Engine::init(Window& window)
     m_terrain.generate(256, 0.5f, 10.0f);
     m_terrain.upload();
 
-    // Create ONE entity for the terrain
-    m_scene.create()
-        .setPosition(0, 0, 0)
-        .setMesh(m_terrain.handle())
-        .setColor(1, 1, 1, 1)
-        .build();
-
-    // ── Create the PLAYER entity ──
-    float startX = 0.0f;
-    float startZ = 0.0f;
-    float startY = m_terrain.getHeight(startX, startZ) + 15.0f;
-
-    m_scene.create()
-        .setPosition(startX, startY, startZ)
-        .setMesh(0)
-        .setColor(0, 1, 0, 1)
-        .makePlayer(8.0f, 5.0f)
-        .addGravity(9.8f, 1.0f)
-        .addCollider(1.0f, 0.0f)
-        .build();
-
-    std::cout << "Player created at (" << startX << ", " << startY << ", "
-              << startZ << ") - falling to terrain\n";
-
     // ── Wire physics to terrain height ──
     m_physics.setTerrainHeightFn(
         [this](float wx, float wz) -> float {
             return m_terrain.getHeight(wx, wz);
         });
+
+    // ── Try to auto-load world.json ──
+    // If assets/world.json exists, load it (replaces terrain + entities).
+    // Otherwise, create a default world with terrain + player.
+    std::ifstream worldFile("assets/world.json");
+    if (worldFile.good()) {
+        worldFile.close();
+        std::cout << "Found assets/world.json — auto-loading world...\n";
+        WorldSerializer::load("assets/world.json", *this);
+    } else {
+        worldFile.close();
+        std::cout << "No world.json found — creating default world\n";
+
+        // Create ONE entity for the terrain
+        m_scene.create()
+            .setPosition(0, 0, 0)
+            .setMesh(m_terrain.handle())
+            .setColor(1, 1, 1, 1)
+            .setTag("Terrain", "terrain")
+            .build();
+
+        // Create the PLAYER entity
+        float startX = 0.0f;
+        float startZ = 0.0f;
+        float startY = m_terrain.getHeight(startX, startZ) + 15.0f;
+
+        m_scene.create()
+            .setPosition(startX, startY, startZ)
+            .setMesh(0)
+            .setColor(0, 1, 0, 1)
+            .makePlayer(8.0f, 5.0f)
+            .addGravity(9.8f, 1.0f)
+            .addCollider(1.0f, 0.0f)
+            .setTag("Player", "player")
+            .build();
+
+        std::cout << "Player created at (" << startX << ", " << startY << ", "
+                  << startZ << ") - falling to terrain\n";
+    }
 
     // ── Create RenderPipeline ──
     m_pipeline = std::make_unique<RenderPipeline>(

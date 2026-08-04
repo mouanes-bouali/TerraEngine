@@ -13,8 +13,18 @@ void EntityCreatorPanel::render(Engine& engine)
     // ── Type ──
     ImGui::Combo("Type", &m_type, m_typeNames, 4);
 
-    // ── Mesh ──
-    ImGui::SliderInt("Mesh Handle", &m_mesh, 0, 10);
+    // ── Mesh selection ──
+    auto& meshLib = engine.meshLibrary();
+    if (meshLib.count() > 0) {
+        std::vector<const char*> meshNames;
+        for (const auto& mesh : meshLib.all()) {
+            meshNames.push_back(mesh.name.c_str());
+        }
+        ImGui::Combo("Mesh", &m_mesh, meshNames.data(), (int)meshNames.size());
+    } else {
+        ImGui::TextDisabled("No meshes loaded");
+        m_mesh = 0;
+    }
 
     // ── Color ──
     static float color[3] = {1, 1, 1};
@@ -26,13 +36,14 @@ void EntityCreatorPanel::render(Engine& engine)
 
     // ── Create Button ──
     if (ImGui::Button("Create Entity")) {
+        uint32_t meshHandle = (meshLib.count() > 0) ? static_cast<uint32_t>(m_mesh + 1) : 0;
+
         auto builder = engine.scene().create()
             .setPosition(pos[0], pos[1], pos[2])
-            .setMesh(static_cast<uint32_t>(m_mesh))
+            .setMesh(meshHandle)
             .setColor(color[0], color[1], color[2], 1.0f)
             .setTag(m_name, m_typeNames[m_type]);
 
-        // Add type-specific components
         if (m_type == 1) {  // Player
             builder.makePlayer(8.0f, 5.0f)
                    .addGravity(9.8f, 1.0f)

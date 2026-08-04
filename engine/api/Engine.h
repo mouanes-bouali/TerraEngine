@@ -9,6 +9,7 @@
 #include "systems/CameraController.h"
 #include "systems/RenderSystem.h"
 #include "renderer/RenderPipeline.h"
+#include "assets/MeshLibrary.h"
 #include "ui/EntityCreatorPanel.h"
 #include "ui/InspectorPanel.h"
 #include "ui/EntityListPanel.h"
@@ -56,6 +57,7 @@ public:
     RenderSystem& renderSystem() { return m_renderSystem; }
     RenderPipeline& pipeline() { return *m_pipeline; }
     IInput& input() { return *m_input; }
+    MeshLibrary& meshLibrary() { return m_meshLibrary; }
 
 private:
     Engine() = default;
@@ -77,6 +79,7 @@ private:
     std::unique_ptr<RenderPipeline> m_pipeline;
     EngineMode m_mode = EngineMode::Edit;
     bool m_initialized = false;
+    MeshLibrary m_meshLibrary;
 
     // Editor panels (Edit mode only)
     EntityCreatorPanel m_entityCreator;
