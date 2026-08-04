@@ -49,11 +49,21 @@ EntityData WorldSerializer::extractEntity(Engine& engine, EntityID id)
         ed.transform = {t.x, t.y, t.z, t.rotationX, t.rotationY, t.rotationZ, t.scaleX, t.scaleY, t.scaleZ};
     }
 
-    // Mesh/Renderable
+    // Mesh/Renderable — store the mesh NAME so we can re-map the GPU handle on load
     if (scene.has<CRenderable>(id)) {
         auto& r = scene.get<CRenderable>(id);
-        ed.mesh = MeshRefData{r.meshHandle, r.textureId,
-                              r.color.r, r.color.g, r.color.b, r.color.a};
+        MeshRefData md;
+        md.handle = r.meshHandle;
+        md.textureId = r.textureId;
+        md.r = r.color.r; md.g = r.color.g; md.b = r.color.b; md.a = r.color.a;
+        // Look up the mesh name from the library (handle 0 = cube, handle 1+ = loaded)
+        auto& lib = engine.meshLibrary();
+        if (r.meshHandle >= 1 && r.meshHandle < lib.count() + 1) {
+            md.name = lib.get(r.meshHandle - 1).name;
+        } else {
+            md.name = "cube";
+        }
+        ed.mesh = md;
     }
 
     // Health
@@ -148,7 +158,20 @@ void WorldSerializer::importWorld(Engine& engine, const WorldData& world)
             .setTag(ed.name, ed.type);
 
         if (ed.mesh.has_value()) {
-            builder.setMesh(ed.mesh->handle)
+            // Re-map the GPU handle by mesh NAME (handles change across restarts)
+            uint32_t newHandle = 0;  // default: cube
+            auto& lib = engine.meshLibrary();
+            if (ed.mesh->name.empty() || ed.mesh->name == "cube") {
+                newHandle = 0;
+            } else {
+                for (size_t mi = 0; mi < lib.count(); ++mi) {
+                    if (lib.get(mi).name == ed.mesh->name) {
+                        newHandle = static_cast<uint32_t>(mi + 1);  // +1 because cube = 0
+                        break;
+                    }
+                }
+            }
+            builder.setMesh(newHandle)
                    .setColor(ed.mesh->r, ed.mesh->g, ed.mesh->b, ed.mesh->a);
             if (ed.mesh->textureId >= 0)
                 builder.setTexture(ed.mesh->textureId);
@@ -227,6 +250,7 @@ std::string WorldSerializer::worldToJson(const WorldData& world)
         if (ed.mesh.has_value()) {
             ss << ",\n      \"mesh\": {"
                << "\"handle\":" << ed.mesh->handle
+               << ",\"name\":\"" << esc(ed.mesh->name) << "\""
                << ",\"textureId\":" << ed.mesh->textureId
                << ",\"r\":" << fmt(ed.mesh->r)
                << ",\"g\":" << fmt(ed.mesh->g)
@@ -366,6 +390,7 @@ WorldData WorldSerializer::jsonToWorld(const std::string& json)
             if (block.find("\"mesh\"") != std::string::npos) {
                 MeshRefData m;
                 m.handle = extractInt(block, "handle");
+                m.name = extractStr(block, "name");
                 m.textureId = extractInt(block, "textureId");
                 m.r = extractFloat(block, "r");
                 m.g = extractFloat(block, "g");

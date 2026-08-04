@@ -125,10 +125,13 @@ void Engine::run()
     GameLoop loop;
     loop.init(1.0f / 60.0f);
 
-    // Input: camera reads mouse (only in Edit mode)
+    // Input: camera reads mouse (only in Edit mode, and NOT when ImGui captures the mouse)
     loop.addInputUpdate([this](float /*dt*/) {
         if (m_mode == EngineMode::Edit) {
-            m_camera.handleInput(*m_input);
+            // Don't orbit/pan the camera when the user is dragging ImGui widgets
+            if (!ImGui::GetIO().WantCaptureMouse && !ImGui::GetIO().WantCaptureKeyboard) {
+                m_camera.handleInput(*m_input);
+            }
         }
     }, *m_window);
 

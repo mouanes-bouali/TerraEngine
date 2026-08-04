@@ -25,6 +25,7 @@ struct TransformData {
 
 struct MeshRefData {
     uint32_t handle = 0;
+    std::string name;      // mesh name (used to re-map GPU handle after reload)
     int textureId = -1;
     float r = 1.0f, g = 1.0f, b = 1.0f, a = 1.0f;
 };
